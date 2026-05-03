@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
+import { PawPrint, Search, Megaphone, Camera, MapPin, Phone, Loader2, Lightbulb, Coins } from 'lucide-react';
 
 type Match = {
   id: number;
@@ -202,7 +203,7 @@ export default function PerdidosPage() {
     <main className="min-h-screen bg-gray-50">
       {/* Hero */}
       <section className="bg-[#1a1a2e] px-8 py-14 text-center">
-        <div className="text-5xl mb-3">🐾</div>
+        <div className="flex justify-center mb-3"><PawPrint size={48} className="text-orange-400" /></div>
         <h1 className="text-white text-4xl font-bold mb-2">Mascotas perdidas</h1>
         <p className="text-white/50 text-base max-w-md mx-auto">
           Busca tu mascota en el catálogo con IA o repórtala como perdida para que la comunidad te ayude.
@@ -213,12 +214,12 @@ export default function PerdidosPage() {
       <div className="max-w-3xl mx-auto px-6 mt-8">
         <div className="flex bg-white rounded-2xl p-1 shadow-sm border border-gray-100 mb-8">
           <button onClick={() => setTab('buscar')}
-            className={`flex-1 py-3 rounded-xl text-sm font-semibold transition ${tab === 'buscar' ? 'bg-[#1a1a2e] text-white' : 'text-gray-400 hover:text-gray-600'}`}>
-            🔍 Buscar en catálogo con IA
+            className={`flex-1 py-3 rounded-xl text-sm font-semibold transition flex items-center justify-center gap-2 ${tab === 'buscar' ? 'bg-[#1a1a2e] text-white' : 'text-gray-400 hover:text-gray-600'}`}>
+            <Search size={15} /> Buscar en catálogo con IA
           </button>
           <button onClick={() => setTab('reportar')}
-            className={`flex-1 py-3 rounded-xl text-sm font-semibold transition ${tab === 'reportar' ? 'bg-[#1a1a2e] text-white' : 'text-gray-400 hover:text-gray-600'}`}>
-            📢 Reportar mascota perdida
+            className={`flex-1 py-3 rounded-xl text-sm font-semibold transition flex items-center justify-center gap-2 ${tab === 'reportar' ? 'bg-[#1a1a2e] text-white' : 'text-gray-400 hover:text-gray-600'}`}>
+            <Megaphone size={15} /> Reportar mascota perdida
           </button>
         </div>
 
@@ -236,7 +237,7 @@ export default function PerdidosPage() {
                 </div>
               ) : (
                 <div className="flex flex-col items-center gap-2 text-gray-400">
-                  <div className="text-6xl">📷</div>
+                  <Camera size={56} className="text-gray-300" />
                   <p className="text-base font-medium text-gray-600">Sube una foto de tu mascota perdida</p>
                   <p className="text-sm">La IA buscará coincidencias en el catálogo</p>
                 </div>
@@ -248,7 +249,7 @@ export default function PerdidosPage() {
             {preview && (
               <button onClick={handleSearch} disabled={searching}
                 className="w-full mt-4 bg-orange-500 hover:bg-orange-600 disabled:opacity-60 text-white font-semibold py-4 rounded-xl transition flex items-center justify-center gap-2">
-                {searching ? <><span className="animate-spin">⏳</span> Buscando con IA...</> : <>🔍 Buscar mi mascota</>}
+                {searching ? <><Loader2 size={18} className="animate-spin" /> Buscando con IA...</> : <><Search size={18} /> Buscar mi mascota</>}
               </button>
             )}
 
@@ -287,16 +288,16 @@ export default function PerdidosPage() {
                       <div className="p-4">
                         <div className="font-semibold text-[#1a1a2e]">{m.name}</div>
                         <div className="text-xs text-gray-400 mt-1">{m.breed} · {m.type}</div>
-                        <div className="text-xs text-gray-400 mt-1">📍 {m.location}</div>
-                        <div className="mt-2 text-xs text-gray-500 bg-gray-50 rounded-lg p-2 italic">💡 {m.razon}</div>
+                        <div className="text-xs text-gray-400 mt-1 flex items-center gap-1"><MapPin size={11} />{m.location}</div>
+                        <div className="mt-2 text-xs text-gray-500 bg-gray-50 rounded-lg p-2 italic flex items-start gap-1"><Lightbulb size={12} className="mt-0.5 shrink-0" />{m.razon}</div>
                       </div>
                     </a>
                   ))}
                 </div>
                 {matches.length === 0 && (
                   <button onClick={() => setTab('reportar')}
-                    className="w-full mt-4 bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 rounded-xl transition text-sm">
-                    📢 Reportar como perdida
+                    className="w-full mt-4 bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 rounded-xl transition text-sm flex items-center justify-center gap-2">
+                    <Megaphone size={16} /> Reportar como perdida
                   </button>
                 )}
               </div>
@@ -313,12 +314,12 @@ export default function PerdidosPage() {
               {reportPreview ? (
                 <div className="flex flex-col items-center gap-3">
                   <img src={reportPreview} alt="preview" className="h-44 w-auto rounded-xl object-cover shadow" />
-                  {analyzing && <p className="text-sm text-orange-500 animate-pulse">🤖 Analizando con IA...</p>}
+                  {analyzing && <p className="text-sm text-orange-500 animate-pulse flex items-center gap-1 justify-center"><Loader2 size={14} className="animate-spin" /> Analizando con IA...</p>}
                   {!analyzing && <p className="text-xs text-gray-400">Haz clic para cambiar la foto</p>}
                 </div>
               ) : (
                 <div className="flex flex-col items-center gap-2 text-gray-400">
-                  <div className="text-5xl">📷</div>
+                  <Camera size={48} className="text-gray-300" />
                   <p className="text-sm font-medium text-gray-600">Sube una foto de tu mascota *</p>
                 </div>
               )}
@@ -354,7 +355,7 @@ export default function PerdidosPage() {
             <div className="bg-white rounded-2xl p-6 flex flex-col gap-3 shadow-sm">
               <h3 className="font-semibold text-[#1a1a2e]">Última ubicación vista</h3>
               <div className="flex items-center gap-3 bg-gray-50 rounded-xl px-4 py-3">
-                <span>📍</span>
+                <MapPin size={16} className="text-orange-400 shrink-0" />
                 <span className="text-sm text-gray-600 flex-1">{location}</span>
                 <button type="button" onClick={getLocation} className="text-xs text-orange-500 font-medium">Actualizar</button>
               </div>
@@ -393,7 +394,7 @@ export default function PerdidosPage() {
 
             <button type="submit" disabled={!reportFile || submitting || !locationReady}
               className="w-full bg-orange-500 hover:bg-orange-600 disabled:opacity-50 text-white font-semibold py-4 rounded-xl transition">
-              {submitting ? '⏳ Publicando...' : '📢 Publicar mascota perdida'}
+              {submitting ? <><Loader2 size={18} className="animate-spin inline mr-1" />Publicando...</> : <><Megaphone size={18} className="inline mr-1" />Publicar mascota perdida</>}
             </button>
           </form>
         )}
@@ -417,18 +418,18 @@ export default function PerdidosPage() {
                 <div className="relative">
                   <img src={pet.imagen} alt={pet.nombre} className="h-40 w-full object-cover" />
                   {pet.recompensa > 0 && (
-                    <span className="absolute top-2 left-2 bg-yellow-400 text-yellow-900 text-[10px] font-bold px-2 py-1 rounded-full">
-                      💰 ${pet.recompensa.toLocaleString('es-CL')}
+                    <span className="absolute top-2 left-2 bg-yellow-400 text-yellow-900 text-[10px] font-bold px-2 py-1 rounded-full flex items-center gap-1">
+                      <Coins size={10} />${pet.recompensa.toLocaleString('es-CL')}
                     </span>
                   )}
                 </div>
                 <div className="p-4">
                   <div className="font-semibold text-[#1a1a2e]">{pet.nombre || 'Sin nombre'}</div>
                   <div className="text-xs text-gray-400 mt-1">{pet.raza} · {pet.tipo}</div>
-                  <div className="text-xs text-gray-400 mt-1">📍 {pet.ultima_ubicacion}</div>
+                  <div className="text-xs text-gray-400 mt-1 flex items-center gap-1"><MapPin size={11} />{pet.ultima_ubicacion}</div>
                   <a href={`tel:${pet.contacto_telefono}`}
-                    className="mt-3 block w-full text-center bg-orange-50 hover:bg-orange-100 text-orange-600 text-xs font-semibold py-2 rounded-lg transition">
-                    📞 Llamar a {pet.contacto_nombre}
+                    className="mt-3 flex items-center justify-center gap-1 w-full text-center bg-orange-50 hover:bg-orange-100 text-orange-600 text-xs font-semibold py-2 rounded-lg transition">
+                    <Phone size={12} /> Llamar a {pet.contacto_nombre}
                   </a>
                 </div>
               </div>
@@ -436,7 +437,7 @@ export default function PerdidosPage() {
           </div>
         ) : (
           <div className="bg-white rounded-2xl p-10 border border-gray-100 text-center text-gray-400">
-            <div className="text-4xl mb-3">🐾</div>
+            <div className="flex justify-center mb-3"><PawPrint size={40} className="text-gray-300" /></div>
             <p>No hay mascotas perdidas reportadas aún</p>
           </div>
         )}
