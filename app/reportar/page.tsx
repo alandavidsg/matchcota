@@ -175,7 +175,7 @@ export default function ReportarPage() {
     if (!imageUrls.length) { alert('Error subiendo imágenes. Intenta de nuevo.'); setSubmitting(false); return; }
 
     const { error: insertError } = await supabase.from('mascotas').insert({
-      name: form.raza ? `${form.raza} reportado` : `${form.tipo} reportado`,
+      name: `${form.tipo}${form.raza ? ` ${form.raza}` : ''} reportado`,
       type: form.tipo,
       breed: form.raza,
       age: form.edad,
