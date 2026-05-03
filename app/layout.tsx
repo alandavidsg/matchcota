@@ -37,17 +37,17 @@
           <footer className="bg-[#1a1a2e] mt-8">
             <div className="max-w-5xl mx-auto px-8 py-12 grid grid-cols-1 md:grid-cols-3 gap-8">
               <div>
-                <div className="text-white text-lg font-semibold mb-3">Pet<span className="text-orange-500">Match</span></div>
+                <div className="text-white text-lg font-semibold mb-3 flex items-center gap-1.5"><PawPrint size={18} className="text-orange-500" />Pet<span className="text-orange-500">Match</span></div>
                 <p className="text-white/40 text-sm leading-relaxed">Conectando mascotas de la calle con hogares llenos de amor en Chile.</p>
               </div>
               <div>
                 <div className="text-white text-sm font-medium mb-3">Enlaces</div>
                 <div className="flex flex-col gap-2">
-                  <a href="/catalogo" className="text-white/40 hover:text-white text-sm transition">Catalogo</a>
+                  <a href="/catalogo" className="text-white/40 hover:text-white text-sm transition">Catálogo</a>
                   <a href="/mapa" className="text-white/40 hover:text-white text-sm transition">Mapa</a>
                   <a href="/perdidos" className="text-white/40 hover:text-white text-sm transition">Mascotas perdidas</a>
                   <a href="/reportar" className="text-white/40 hover:text-white text-sm transition">Reportar mascota</a>
-                  <a href="/quienes-somos" className="text-white/40 hover:text-white text-sm transition">Quienes somos</a>
+                  <a href="/quienes-somos" className="text-white/40 hover:text-white text-sm transition">Quiénes somos</a>
                   <a href="/contacto" className="text-white/40 hover:text-white text-sm transition">Contacto</a>
                 </div>
               </div>
