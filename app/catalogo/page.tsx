@@ -177,15 +177,19 @@ function CatalogoContent() {
                   <div className="p-4">
                     <div className="font-semibold text-[#1a1a2e] text-base">{pet.name}</div>
                     <div className="text-sm text-gray-400 mt-1">{pet.breed} · {pet.age}</div>
-                    <a
-                      href={pet.lat && pet.lng ? `https://www.google.com/maps?q=${pet.lat},${pet.lng}` : `https://www.google.com/maps/search/${encodeURIComponent(pet.location)}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={(e) => e.stopPropagation()}
-                      className="text-xs text-gray-400 mt-2 flex items-center gap-1 hover:text-orange-500 transition w-fit"
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const url = pet.lat && pet.lng
+                          ? `https://www.google.com/maps?q=${pet.lat},${pet.lng}`
+                          : `https://www.google.com/maps/search/${encodeURIComponent(pet.location)}`;
+                        window.open(url, '_blank', 'noopener,noreferrer');
+                      }}
+                      className="text-xs text-gray-400 mt-2 flex items-center gap-1 hover:text-orange-500 transition"
                     >
                       <MapPin size={11} />{pet.location}
-                    </a>
+                    </button>
                     <span className="inline-block mt-3 text-xs px-3 py-1 rounded-full bg-orange-50 text-orange-500 font-medium">
                       {pet.type}
                     </span>
