@@ -14,7 +14,8 @@
           <div className="bg-[#12122a] px-8 py-2 flex items-center justify-between text-xs text-white/40">
             <span>Ayudando a mascotas desde 2026</span>
             <div className="flex gap-4">
-              <a href="/quienes-somos" className="hover:text-white transition">Quienes somos</a>
+              <a href="/quienes-somos" className="hover:text-white transition">Quiénes somos</a>
+              <a href="/faq" className="hover:text-white transition">FAQ</a>
               <a href="/contacto" className="hover:text-white transition">Contacto</a>
             </div>
           </div>
@@ -48,6 +49,7 @@
                   <a href="/perdidos" className="text-white/40 hover:text-white text-sm transition">Mascotas perdidas</a>
                   <a href="/reportar" className="text-white/40 hover:text-white text-sm transition">Reportar mascota</a>
                   <a href="/quienes-somos" className="text-white/40 hover:text-white text-sm transition">Quiénes somos</a>
+                  <a href="/faq" className="text-white/40 hover:text-white text-sm transition">Preguntas frecuentes</a>
                   <a href="/contacto" className="text-white/40 hover:text-white text-sm transition">Contacto</a>
                 </div>
               </div>
