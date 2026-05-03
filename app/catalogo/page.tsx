@@ -18,17 +18,6 @@ type Pet = {
   lng: number | null;
 };
 
-const filters = [
-  { label: 'Todos', value: 'todos' },
-  { label: 'Perros', value: 'Perro' },
-  { label: 'Gatos', value: 'Gato' },
-  { label: 'Pájaros', value: 'Pájaro' },
-  { label: 'Conejos', value: 'Conejo' },
-  { label: 'Urgente', value: 'urgente' },
-  { label: 'Otros', value: 'Animal' },
-  { label: '❤️ Favoritos', value: 'favoritos' },
-];
-
 function CatalogoContent() {
   const searchParams = useSearchParams();
   const tipoParam = searchParams.get('tipo') || 'todos';
@@ -117,7 +106,7 @@ function CatalogoContent() {
     Conejo: 'Conejos en adopción',
     urgente: 'Adopción urgente',
     Animal: 'Animales exóticos en adopción',
-    favoritos: '❤️ Mis favoritos',
+    favoritos: 'Mis favoritos',
   };
   const activeLabel = categoryTitles[activeFilter] || 'Todas las mascotas';
 
@@ -133,8 +122,8 @@ function CatalogoContent() {
       </div>
 
       <div className="max-w-5xl mx-auto px-8 py-8">
-        {/* Filtro por región */}
-        <div className="flex items-center gap-3 mb-8">
+        {/* Filtros */}
+        <div className="flex items-center gap-3 mb-8 flex-wrap">
           <span className="text-sm text-gray-400 flex-shrink-0 flex items-center gap-1"><MapPin size={14} /> Región:</span>
           <select
             value={activeCityFilter}
@@ -148,6 +137,23 @@ function CatalogoContent() {
               </option>
             ))}
           </select>
+
+          <button
+            onClick={() => setActiveFilter(activeFilter === 'favoritos' ? 'todos' : 'favoritos')}
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm border transition font-medium ${
+              activeFilter === 'favoritos'
+                ? 'bg-red-500 text-white border-red-500'
+                : 'bg-white text-gray-500 border-gray-200 hover:border-red-400 hover:text-red-400'
+            }`}
+          >
+            <Heart size={14} className={activeFilter === 'favoritos' ? 'fill-white' : ''} />
+            Favoritos
+            {favorites.length > 0 && (
+              <span className={`text-xs rounded-full px-1.5 py-0.5 font-semibold ${activeFilter === 'favoritos' ? 'bg-white/30 text-white' : 'bg-red-100 text-red-500'}`}>
+                {favorites.length}
+              </span>
+            )}
+          </button>
         </div>
 
         {loading ? (
