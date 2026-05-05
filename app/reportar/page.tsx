@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '../../lib/supabase';
 import { ArrowLeft, Camera, Home, MapPin, Phone, CheckCircle, Sparkles, PenLine } from 'lucide-react';
+import exifr from 'exifr';
 
 export default function ReportarPage() {
   const router = useRouter();
@@ -74,9 +75,31 @@ export default function ReportarPage() {
       reader.readAsDataURL(f);
     });
 
+  const extractGpsFromFile = async (file: File) => {
+    try {
+      const gps = await exifr.gps(file);
+      if (gps?.latitude && gps?.longitude) {
+        setCoords({ lat: gps.latitude, lng: gps.longitude });
+        try {
+          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${gps.latitude}&lon=${gps.longitude}&format=json`);
+          const data = await res.json();
+          const suburb = data.address?.suburb || data.address?.neighbourhood || data.address?.quarter || '';
+          const city = data.address?.city || data.address?.town || data.address?.municipality || '';
+          setLocation(suburb && city ? `${suburb}, ${city}` : data.display_name?.split(',').slice(0, 2).join(',').trim());
+          setLocationReady(true);
+        } catch {
+          setLocation(`${gps.latitude.toFixed(4)}, ${gps.longitude.toFixed(4)}`);
+          setLocationReady(true);
+        }
+      }
+    } catch { /* sin EXIF, se mantiene la ubicación del navegador */ }
+  };
+
   const handleFirstPhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
     if (!f) return;
+    // Intentar leer GPS del EXIF (fotos de galería)
+    extractGpsFromFile(f);
     const base64 = await readFile(f);
     setFiles([f]);
     setPreviews([base64]);

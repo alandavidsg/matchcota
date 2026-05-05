@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { PawPrint, Search, Megaphone, Camera, MapPin, Phone, Loader2, Lightbulb, Coins } from 'lucide-react';
+import exifr from 'exifr';
 
 type Match = {
   id: number;
@@ -93,6 +94,28 @@ export default function PerdidosPage() {
     return () => clearTimeout(t);
   }, []);
 
+  // Extrae coordenadas GPS del EXIF de una foto de galería
+  const extractGpsFromFile = async (file: File) => {
+    try {
+      const gps = await exifr.gps(file);
+      if (gps?.latitude && gps?.longitude) {
+        setCoords({ lat: gps.latitude, lng: gps.longitude });
+        // Geocodificar para obtener nombre legible
+        try {
+          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${gps.latitude}&lon=${gps.longitude}&format=json`);
+          const data = await res.json();
+          const suburb = data.address?.suburb || data.address?.neighbourhood || '';
+          const city = data.address?.city || data.address?.town || '';
+          setLocation(suburb && city ? `${suburb}, ${city}` : data.display_name?.split(',').slice(0, 2).join(',').trim());
+          setLocationReady(true);
+        } catch {
+          setLocation(`${gps.latitude.toFixed(4)}, ${gps.longitude.toFixed(4)}`);
+          setLocationReady(true);
+        }
+      }
+    } catch { /* sin EXIF, se mantiene la ubicación del navegador */ }
+  };
+
   // Resize imagen
   const resizeImage = (base64: string, maxSize = 800): Promise<string> =>
     new Promise((resolve) => {
@@ -110,6 +133,9 @@ export default function PerdidosPage() {
 
   // ── Handlers buscar ──
   const handleSearchFile = async (file: File) => {
+    // Intentar leer GPS del EXIF (fotos de galería)
+    extractGpsFromFile(file);
+
     const reader = new FileReader();
     reader.onload = async (e) => {
       const original = e.target?.result as string;
@@ -146,6 +172,9 @@ export default function PerdidosPage() {
 
   // ── Handlers reportar ──
   const handleReportFile = async (f: File) => {
+    // Intentar leer GPS del EXIF (fotos de galería)
+    extractGpsFromFile(f);
+
     setReportFile(f);
     const reader = new FileReader();
     reader.onload = async (e) => {
