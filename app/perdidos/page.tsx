@@ -32,7 +32,8 @@ export default function PerdidosPage() {
   const [tab, setTab] = useState<'buscar' | 'reportar'>('buscar');
 
   // ── BUSCAR ──
-  const fileSearchRef = useRef<HTMLInputElement>(null);
+  const fileSearchCameraRef = useRef<HTMLInputElement>(null);
+  const fileSearchGalleryRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [imageBase64, setImageBase64] = useState<string | null>(null);
   const [searching, setSearching] = useState(false);
@@ -41,7 +42,8 @@ export default function PerdidosPage() {
   const [searchError, setSearchError] = useState<string | null>(null);
 
   // ── REPORTAR ──
-  const fileReportRef = useRef<HTMLInputElement>(null);
+  const fileReportCameraRef = useRef<HTMLInputElement>(null);
+  const fileReportGalleryRef = useRef<HTMLInputElement>(null);
   const [reportFile, setReportFile] = useState<File | null>(null);
   const [reportPreview, setReportPreview] = useState<string | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
@@ -226,24 +228,46 @@ export default function PerdidosPage() {
         {/* ── TAB BUSCAR ── */}
         {tab === 'buscar' && (
           <div>
-            <div className="border-2 border-dashed border-gray-300 rounded-2xl p-10 text-center cursor-pointer hover:border-orange-400 transition bg-white"
-              onClick={() => fileSearchRef.current?.click()}
+            {/* Inputs ocultos: cámara y galería separados */}
+            <input ref={fileSearchCameraRef} type="file" accept="image/*" capture="environment" className="hidden"
+              onChange={(e) => { const f = e.target.files?.[0]; if (f) handleSearchFile(f); }} />
+            <input ref={fileSearchGalleryRef} type="file" accept="image/*" className="hidden"
+              onChange={(e) => { const f = e.target.files?.[0]; if (f) handleSearchFile(f); }} />
+
+            <div className="border-2 border-dashed border-gray-300 rounded-2xl p-8 text-center bg-white"
               onDrop={(e) => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f?.type.startsWith('image/')) handleSearchFile(f); }}
               onDragOver={(e) => e.preventDefault()}>
               {preview ? (
                 <div className="flex flex-col items-center gap-3">
                   <img src={preview} alt="preview" className="h-52 w-auto rounded-xl object-cover shadow" />
-                  <p className="text-xs text-gray-400">Haz clic para cambiar la foto</p>
+                  <div className="flex gap-3 mt-1">
+                    <button type="button" onClick={() => fileSearchCameraRef.current?.click()}
+                      className="flex-1 border border-orange-400 text-orange-500 rounded-xl py-2 text-sm font-medium">
+                      Sacar foto
+                    </button>
+                    <button type="button" onClick={() => fileSearchGalleryRef.current?.click()}
+                      className="flex-1 border border-gray-200 text-gray-500 rounded-xl py-2 text-sm font-medium">
+                      Cambiar imagen
+                    </button>
+                  </div>
                 </div>
               ) : (
-                <div className="flex flex-col items-center gap-2 text-gray-400">
-                  <Camera size={56} className="text-gray-300" />
-                  <p className="text-base font-medium text-gray-600">Sube una foto de tu mascota perdida</p>
-                  <p className="text-sm">La IA buscará coincidencias en el catálogo</p>
+                <div className="flex flex-col items-center gap-3 text-gray-400">
+                  <Camera size={48} className="text-gray-300" />
+                  <p className="text-base font-medium text-gray-600">Foto de tu mascota perdida</p>
+                  <p className="text-sm text-gray-400">La IA buscará coincidencias en el catálogo</p>
+                  <div className="flex gap-3 w-full mt-2">
+                    <button type="button" onClick={() => fileSearchCameraRef.current?.click()}
+                      className="flex-1 bg-orange-500 text-white rounded-xl py-3 text-sm font-medium">
+                      Sacar foto
+                    </button>
+                    <button type="button" onClick={() => fileSearchGalleryRef.current?.click()}
+                      className="flex-1 border border-orange-500 text-orange-500 rounded-xl py-3 text-sm font-medium">
+                      Subir imagen
+                    </button>
+                  </div>
                 </div>
               )}
-              <input ref={fileSearchRef} type="file" accept="image/*" className="hidden"
-                onChange={(e) => { const f = e.target.files?.[0]; if (f) handleSearchFile(f); }} />
             </div>
 
             {preview && (
@@ -308,23 +332,47 @@ export default function PerdidosPage() {
         {/* ── TAB REPORTAR ── */}
         {tab === 'reportar' && (
           <form onSubmit={handleSubmit} className="flex flex-col gap-5 pb-10">
+            {/* Inputs ocultos: cámara y galería separados */}
+            <input ref={fileReportCameraRef} type="file" accept="image/*" capture="environment" className="hidden"
+              onChange={(e) => { const f = e.target.files?.[0]; if (f) handleReportFile(f); }} />
+            <input ref={fileReportGalleryRef} type="file" accept="image/*" className="hidden"
+              onChange={(e) => { const f = e.target.files?.[0]; if (f) handleReportFile(f); }} />
+
             {/* Foto */}
-            <div className="border-2 border-dashed border-gray-300 rounded-2xl p-8 text-center cursor-pointer hover:border-orange-400 transition bg-white"
-              onClick={() => fileReportRef.current?.click()}>
+            <div className="border-2 border-dashed border-gray-300 rounded-2xl p-8 text-center bg-white">
               {reportPreview ? (
                 <div className="flex flex-col items-center gap-3">
                   <img src={reportPreview} alt="preview" className="h-44 w-auto rounded-xl object-cover shadow" />
                   {analyzing && <p className="text-sm text-orange-500 animate-pulse flex items-center gap-1 justify-center"><Loader2 size={14} className="animate-spin" /> Analizando con IA...</p>}
-                  {!analyzing && <p className="text-xs text-gray-400">Haz clic para cambiar la foto</p>}
+                  {!analyzing && (
+                    <div className="flex gap-3 w-full">
+                      <button type="button" onClick={() => fileReportCameraRef.current?.click()}
+                        className="flex-1 border border-orange-400 text-orange-500 rounded-xl py-2 text-sm font-medium">
+                        Sacar foto
+                      </button>
+                      <button type="button" onClick={() => fileReportGalleryRef.current?.click()}
+                        className="flex-1 border border-gray-200 text-gray-500 rounded-xl py-2 text-sm font-medium">
+                        Cambiar imagen
+                      </button>
+                    </div>
+                  )}
                 </div>
               ) : (
-                <div className="flex flex-col items-center gap-2 text-gray-400">
+                <div className="flex flex-col items-center gap-3 text-gray-400">
                   <Camera size={48} className="text-gray-300" />
-                  <p className="text-sm font-medium text-gray-600">Sube una foto de tu mascota *</p>
+                  <p className="text-sm font-medium text-gray-600">Foto de tu mascota *</p>
+                  <div className="flex gap-3 w-full mt-1">
+                    <button type="button" onClick={() => fileReportCameraRef.current?.click()}
+                      className="flex-1 bg-orange-500 text-white rounded-xl py-3 text-sm font-medium">
+                      Sacar foto
+                    </button>
+                    <button type="button" onClick={() => fileReportGalleryRef.current?.click()}
+                      className="flex-1 border border-orange-500 text-orange-500 rounded-xl py-3 text-sm font-medium">
+                      Subir imagen
+                    </button>
+                  </div>
                 </div>
               )}
-              <input ref={fileReportRef} type="file" accept="image/*" className="hidden"
-                onChange={(e) => { const f = e.target.files?.[0]; if (f) handleReportFile(f); }} />
             </div>
 
             {/* Datos mascota */}
