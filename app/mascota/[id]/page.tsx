@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { supabase } from '../../../lib/supabase';
-import { MapPin, ArrowLeft, AlertTriangle, CheckCircle } from 'lucide-react';
+import { MapPin, ArrowLeft, AlertTriangle, CheckCircle, Eye } from 'lucide-react';
 
 type Pet = {
   id: number;
@@ -19,6 +19,16 @@ type Pet = {
   lat: number | null;
   lng: number | null;
   refugio_id: string | null;
+  avistamientos_count: number | null;
+};
+
+type Avistamiento = {
+  id: string;
+  lat: number | null;
+  lng: number | null;
+  location: string | null;
+  imagen: string | null;
+  created_at: string;
 };
 
 export default function PetDetail() {
@@ -27,6 +37,7 @@ export default function PetDetail() {
   const [pet, setPet] = useState<Pet | null>(null);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [avistamientos, setAvistamientos] = useState<Avistamiento[]>([]);
   const [currentImg, setCurrentImg] = useState(0);
   const [lightbox, setLightbox] = useState(false);
   const touchStartX = useRef(0);
@@ -50,7 +61,12 @@ export default function PetDetail() {
         .eq('id', params.id)
         .single();
 
-      if (!error && data) setPet(data);
+      if (!error && data) {
+        setPet(data);
+        // Cargar historial de avistamientos
+        const avRes = await fetch(`/api/avistamientos?mascota_id=${params.id}`);
+        if (avRes.ok) setAvistamientos(await avRes.json());
+      }
       setLoading(false);
     }
     fetchPet();
@@ -299,6 +315,52 @@ export default function PetDetail() {
 
                 <p className="text-gray-600 leading-relaxed">{pet.description}</p>
               </div>
+
+              {/* Timeline de avistamientos */}
+              {avistamientos.length > 0 && (
+                <div className="bg-white rounded-3xl border border-gray-100 p-6 mb-6">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Eye size={16} className="text-orange-500" />
+                    <h3 className="font-semibold text-[#1a1a2e] text-sm">
+                      Historial de avistamientos · {(pet.avistamientos_count ?? 1)} vez{(pet.avistamientos_count ?? 1) !== 1 ? 'es' : ''} visto
+                    </h3>
+                  </div>
+                  <div className="flex flex-col gap-3">
+                    {avistamientos.map((av, i) => (
+                      <div key={av.id} className="flex items-start gap-3">
+                        <div className="flex flex-col items-center">
+                          <div className={`w-3 h-3 rounded-full mt-0.5 shrink-0 ${i === 0 ? 'bg-orange-500' : 'bg-gray-300'}`} />
+                          {i < avistamientos.length - 1 && <div className="w-px flex-1 bg-gray-100 mt-1 mb-0" style={{ minHeight: '24px' }} />}
+                        </div>
+                        <div className="flex-1 min-w-0 pb-2">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-xs font-medium text-[#1a1a2e]">
+                              {new Date(av.created_at).toLocaleDateString('es-CL', { day: 'numeric', month: 'short', year: 'numeric' })}
+                            </span>
+                            {i === 0 && <span className="text-[10px] bg-orange-100 text-orange-500 px-2 py-0.5 rounded-full font-medium">Último avistamiento</span>}
+                          </div>
+                          {av.location && (
+                            <button
+                              onClick={() => {
+                                const url = av.lat && av.lng
+                                  ? `https://www.google.com/maps?q=${av.lat},${av.lng}`
+                                  : `https://www.google.com/maps/search/${encodeURIComponent(av.location!)}`;
+                                window.open(url, '_blank', 'noopener,noreferrer');
+                              }}
+                              className="text-xs text-gray-400 flex items-center gap-1 mt-0.5 hover:text-orange-500 transition"
+                            >
+                              <MapPin size={10} /> {av.location}
+                            </button>
+                          )}
+                          {av.imagen && (
+                            <img src={av.imagen} alt="avistamiento" className="w-16 h-16 object-cover rounded-lg mt-1.5" />
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Formulario o botón */}
               {!showForm ? (

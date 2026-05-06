@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { supabase } from '../../lib/supabase';
-import { MapPin, Heart, AlertTriangle, PawPrint } from 'lucide-react';
+import { MapPin, Heart, AlertTriangle, PawPrint, Eye } from 'lucide-react';
 
 type Pet = {
   id: number;
@@ -16,6 +16,7 @@ type Pet = {
   urgente: boolean;
   lat: number | null;
   lng: number | null;
+  avistamientos_count: number | null;
 };
 
 function CatalogoContent() {
@@ -171,6 +172,11 @@ function CatalogoContent() {
                     {pet.urgente && (
                       <span className="absolute top-2 left-2 bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded-full flex items-center gap-1">
                         <AlertTriangle size={10} /> URGENTE
+                      </span>
+                    )}
+                    {(pet.avistamientos_count ?? 1) > 1 && (
+                      <span className="absolute bottom-2 left-2 bg-black/60 text-white text-[10px] px-2 py-1 rounded-full flex items-center gap-1">
+                        <Eye size={10} /> {pet.avistamientos_count} avistamientos
                       </span>
                     )}
                     <button

@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '../../lib/supabase';
-import { ArrowLeft, Camera, Home, MapPin, Phone, CheckCircle, Sparkles, PenLine } from 'lucide-react';
+import { ArrowLeft, Camera, Home, MapPin, Phone, CheckCircle, Sparkles, PenLine, AlertTriangle, Eye } from 'lucide-react';
 import exifr from 'exifr';
 
 export default function ReportarPage() {
@@ -18,6 +18,12 @@ export default function ReportarPage() {
   const [analyzing, setAnalyzing] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
+  // Detección de duplicados
+  type DupMatch = { id: number; name: string; image: string; location: string; similitud: number; razon: string };
+  const [dupMatches, setDupMatches] = useState<DupMatch[]>([]);
+  const [showDupModal, setShowDupModal] = useState(false);
+  const [checkingDups, setCheckingDups] = useState(false);
   const [location, setLocation] = useState('Obteniendo ubicación...');
   const [locationReady, setLocationReady] = useState(false);
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
@@ -74,6 +80,19 @@ export default function ReportarPage() {
       reader.onload = (ev) => resolve(ev.target?.result as string);
       reader.readAsDataURL(f);
     });
+
+  // Busca duplicados por similitud visual antes de publicar
+  const checkDuplicates = async (imageBase64: string): Promise<DupMatch[]> => {
+    try {
+      const res = await fetch('/api/buscar-mascota', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageBase64 }),
+      });
+      const data = await res.json();
+      return (data.matches ?? []).filter((m: DupMatch) => m.similitud >= 70);
+    } catch { return []; }
+  };
 
   const extractGpsFromFile = async (file: File) => {
     try {
@@ -180,11 +199,9 @@ export default function ReportarPage() {
     setTimeout(() => router.push('/'), 2500);
   };
 
-  const handleSubmit = async () => {
-    if (!files.length) return;
+  // Publica la mascota como nueva (sin duplicado)
+  const publishNew = async () => {
     setSubmitting(true);
-
-    // Subir todas las fotos
     const imageUrls: string[] = [];
     for (const f of files) {
       const filename = `${Date.now()}-${Math.random().toString(36).slice(2)}-${f.name}`;
@@ -194,7 +211,6 @@ export default function ReportarPage() {
         imageUrls.push(data.publicUrl);
       }
     }
-
     if (!imageUrls.length) { alert('Error subiendo imágenes. Intenta de nuevo.'); setSubmitting(false); return; }
 
     const { error: insertError } = await supabase.from('mascotas').insert({
@@ -209,18 +225,123 @@ export default function ReportarPage() {
       lng: coords?.lng ?? null,
       description: `${form.descripcion}. Color: ${form.color}`,
       available: true,
+      avistamientos_count: 1,
     });
 
     if (insertError) { alert('Error guardando mascota. Intenta de nuevo.'); setSubmitting(false); return; }
-
+    setShowDupModal(false);
     setSubmitted(true);
     setTimeout(() => router.push('/'), 2500);
+  };
+
+  // Registra avistamiento en mascota existente
+  const linkToExisting = async (mascotaId: number) => {
+    setSubmitting(true);
+    let imageUrl = previews[0] ?? null;
+    if (files[0]) {
+      const filename = `${Date.now()}-${Math.random().toString(36).slice(2)}-${files[0].name}`;
+      const { error } = await supabase.storage.from('mascotas-images').upload(filename, files[0]);
+      if (!error) {
+        const { data } = supabase.storage.from('mascotas-images').getPublicUrl(filename);
+        imageUrl = data.publicUrl;
+      }
+    }
+    await fetch('/api/avistamientos', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        mascota_id: mascotaId,
+        lat: coords?.lat ?? null,
+        lng: coords?.lng ?? null,
+        location: location || null,
+        imagen: imageUrl,
+      }),
+    });
+    setShowDupModal(false);
+    setSubmitted(true);
+    setTimeout(() => router.push('/'), 2500);
+  };
+
+  const handleSubmit = async () => {
+    if (!files.length) return;
+
+    // Verificar duplicados primero
+    setCheckingDups(true);
+    const resized = await resizeImage(previews[0], 800);
+    const dups = await checkDuplicates(resized);
+    setCheckingDups(false);
+
+    if (dups.length > 0) {
+      setDupMatches(dups);
+      setShowDupModal(true);
+      return;
+    }
+
+    // Sin duplicados → publicar directo
+    publishNew();
   };
 
   const hasPhotos = previews.length > 0;
 
   return (
     <main suppressHydrationWarning>
+      {/* Modal de duplicados */}
+      {showDupModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-end md:items-center justify-center p-4">
+          <div className="bg-white rounded-2xl w-full max-w-md max-h-[85vh] overflow-y-auto">
+            <div className="p-5 border-b border-gray-100">
+              <div className="flex items-center gap-2 text-orange-500 mb-1">
+                <AlertTriangle size={18} />
+                <span className="font-semibold text-sm">Posible mascota ya publicada</span>
+              </div>
+              <p className="text-xs text-gray-400">
+                La IA encontró mascotas similares. ¿Es alguna de estas la misma?
+              </p>
+            </div>
+
+            <div className="p-4 flex flex-col gap-3">
+              {dupMatches.map((m) => (
+                <div key={m.id} className="flex items-center gap-3 bg-gray-50 rounded-xl p-3">
+                  <img src={m.image} alt={m.name} className="w-16 h-16 object-cover rounded-lg shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium text-[#1a1a2e] text-sm">{m.name}</div>
+                    <div className="text-xs text-gray-400 flex items-center gap-1 mt-0.5">
+                      <MapPin size={10} /> {m.location}
+                    </div>
+                    <div className="text-xs text-orange-500 mt-0.5 flex items-center gap-1">
+                      <Eye size={10} /> {m.similitud}% similitud
+                    </div>
+                    <p className="text-xs text-gray-400 italic mt-0.5 truncate">{m.razon}</p>
+                  </div>
+                  <button
+                    onClick={() => linkToExisting(m.id)}
+                    disabled={submitting}
+                    className="shrink-0 bg-orange-500 text-white text-xs px-3 py-2 rounded-lg font-medium hover:bg-orange-600 transition disabled:opacity-50"
+                  >
+                    Sí, es esta
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            <div className="p-4 border-t border-gray-100 flex gap-3">
+              <button
+                onClick={() => setShowDupModal(false)}
+                className="flex-1 border border-gray-200 text-gray-500 py-2.5 rounded-xl text-sm font-medium"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={publishNew}
+                disabled={submitting}
+                className="flex-1 bg-[#1a1a2e] text-white py-2.5 rounded-xl text-sm font-medium hover:bg-[#2a2a4e] transition disabled:opacity-50"
+              >
+                {submitting ? 'Publicando...' : 'No, es diferente'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="max-w-lg mx-auto px-6 py-10">
         <h1 className="text-2xl font-semibold text-[#1a1a2e] mb-2">
           {mode === 'adopcion' ? 'Dar en adopción mi mascota' : 'Reportar mascota'}
@@ -461,8 +582,8 @@ export default function ReportarPage() {
             )}
 
             {hasPhotos && !analyzing && (
-              <button onClick={handleSubmit} disabled={submitting} className="w-full bg-orange-500 text-white py-4 rounded-xl font-medium hover:bg-orange-600 transition disabled:opacity-60 touch-manipulation" style={{ fontSize: '16px' }}>
-                {submitting ? 'Publicando...' : 'Publicar en catálogo'}
+              <button onClick={handleSubmit} disabled={submitting || checkingDups} className="w-full bg-orange-500 text-white py-4 rounded-xl font-medium hover:bg-orange-600 transition disabled:opacity-60 touch-manipulation" style={{ fontSize: '16px' }}>
+                {checkingDups ? 'Verificando duplicados...' : submitting ? 'Publicando...' : 'Publicar en catálogo'}
               </button>
             )}
           </>
