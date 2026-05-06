@@ -7,6 +7,7 @@ const FALLBACK = {
   edad: '',
   color: '',
   descripcion: '',
+  es_animal: false,
 };
 
 export async function POST(req: NextRequest) {
@@ -43,13 +44,14 @@ export async function POST(req: NextRequest) {
               },
               {
                 type: 'text',
-                text: `Analiza esta foto de una mascota callejera y responde ÚNICAMENTE con JSON válido, sin texto adicional:
+                text: `Analiza esta imagen y responde ÚNICAMENTE con JSON válido, sin texto adicional:
 {
-  "tipo": "Perro" o "Gato" o el tipo de animal,
-  "raza": "raza aproximada o Mestizo si no se puede determinar",
-  "edad": "edad aproximada como Cachorro, Joven, Adulto o Senior",
-  "color": "colores del pelaje",
-  "descripcion": "descripción breve del estado y apariencia de la mascota en 1 oración en español"
+  "es_animal": true o false (true solo si es una foto real de un animal real, false si es una persona, objeto, lugar, dibujo, meme, captura de pantalla u otra cosa),
+  "tipo": "Perro" o "Gato" o el tipo de animal (vacío si no es animal),
+  "raza": "raza aproximada o Mestizo si no se puede determinar (vacío si no es animal)",
+  "edad": "Cachorro, Joven, Adulto o Senior (vacío si no es animal)",
+  "color": "colores del pelaje (vacío si no es animal)",
+  "descripcion": "descripción breve en 1 oración en español (vacío si no es animal)"
 }`,
               },
             ],

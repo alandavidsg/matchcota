@@ -24,6 +24,7 @@ export default function ReportarPage() {
   const [dupMatches, setDupMatches] = useState<DupMatch[]>([]);
   const [showDupModal, setShowDupModal] = useState(false);
   const [checkingDups, setCheckingDups] = useState(false);
+  const [notAnimalError, setNotAnimalError] = useState(false);
   const [location, setLocation] = useState('Obteniendo ubicación...');
   const [locationReady, setLocationReady] = useState(false);
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
@@ -158,9 +159,21 @@ export default function ReportarPage() {
 
   const analyzePhoto = (imageBase64: string) => {
     setAnalyzing(true);
+    setNotAnimalError(false);
     fetch('/api/analyze', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ imageBase64 }) })
       .then((res) => res.json())
-      .then((result) => { setForm({ tipo: result.tipo || '', raza: result.raza || '', edad: result.edad || '', color: result.color || '', descripcion: result.descripcion || '' }); setAnalyzing(false); })
+      .then((result) => {
+        if (result.es_animal === false) {
+          // No es un animal — limpiar foto y mostrar error
+          setFiles([]);
+          setPreviews([]);
+          setNotAnimalError(true);
+          setAnalyzing(false);
+          return;
+        }
+        setForm({ tipo: result.tipo || '', raza: result.raza || '', edad: result.edad || '', color: result.color || '', descripcion: result.descripcion || '' });
+        setAnalyzing(false);
+      })
       .catch(() => { setForm({ tipo: '', raza: '', edad: '', color: '', descripcion: '' }); setAnalyzing(false); });
   };
 
@@ -560,6 +573,16 @@ export default function ReportarPage() {
                   </button>
                 </div>
                 <p className="text-xs text-gray-400">{previews.length} foto{previews.length > 1 ? 's' : ''} seleccionada{previews.length > 1 ? 's' : ''}</p>
+              </div>
+            )}
+
+            {notAnimalError && (
+              <div className="flex items-center gap-3 bg-red-50 border border-red-100 rounded-2xl p-4 mb-4">
+                <AlertTriangle size={20} className="text-red-500 shrink-0" />
+                <div>
+                  <p className="text-sm font-medium text-red-600">Foto no válida</p>
+                  <p className="text-xs text-red-400 mt-0.5">Solo se permiten fotos de animales reales. Intenta con otra imagen.</p>
+                </div>
               </div>
             )}
 
