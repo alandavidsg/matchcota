@@ -335,7 +335,7 @@ export default function PetDetail() {
                         <div className="flex-1 min-w-0 pb-2">
                           <div className="flex items-center gap-2 flex-wrap">
                             <span className="text-xs font-medium text-[#1a1a2e]">
-                              {new Date(av.created_at).toLocaleDateString('es-CL', { day: 'numeric', month: 'short', year: 'numeric' })}
+                              {new Date(av.created_at).toLocaleString('es-CL', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                             </span>
                             {i === 0 && <span className="text-[10px] bg-orange-100 text-orange-500 px-2 py-0.5 rounded-full font-medium">Último avistamiento</span>}
                           </div>
