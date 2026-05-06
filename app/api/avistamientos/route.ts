@@ -8,9 +8,11 @@ const supabase = createClient(
 
 export async function POST(req: NextRequest) {
   try {
-    const { mascota_id, lat, lng, location, imagen, inicial } = await req.json();
+    const body = await req.json();
+    const mascota_id = typeof body.mascota_id === 'string' ? parseInt(body.mascota_id, 10) : body.mascota_id;
+    const { lat, lng, location, imagen, inicial } = body;
 
-    if (!mascota_id) {
+    if (!mascota_id || isNaN(mascota_id)) {
       return NextResponse.json({ error: 'mascota_id requerido' }, { status: 400 });
     }
 
@@ -55,9 +57,10 @@ export async function POST(req: NextRequest) {
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
-  const mascota_id = searchParams.get('mascota_id');
+  const raw = searchParams.get('mascota_id');
+  const mascota_id = raw ? parseInt(raw, 10) : null;
 
-  if (!mascota_id) {
+  if (!mascota_id || isNaN(mascota_id)) {
     return NextResponse.json({ error: 'mascota_id requerido' }, { status: 400 });
   }
 
