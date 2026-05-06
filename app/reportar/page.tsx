@@ -213,7 +213,8 @@ export default function ReportarPage() {
     }
     if (!imageUrls.length) { alert('Error subiendo imágenes. Intenta de nuevo.'); setSubmitting(false); return; }
 
-    const { error: insertError } = await supabase.from('mascotas').insert({
+    // Usar .select() para obtener el ID de la mascota recién creada
+    const { data: nueva, error: insertError } = await supabase.from('mascotas').insert({
       name: `${form.tipo}${form.raza ? ` ${form.raza}` : ''} reportado`,
       type: form.tipo,
       breed: form.raza,
@@ -226,19 +227,11 @@ export default function ReportarPage() {
       description: `${form.descripcion}. Color: ${form.color}`,
       available: true,
       avistamientos_count: 1,
-    });
+    }).select('id').single();
 
     if (insertError) { alert('Error guardando mascota. Intenta de nuevo.'); setSubmitting(false); return; }
 
-    // Registrar avistamiento inicial con la ubicación de publicación
-    const { data: nueva } = await supabase
-      .from('mascotas')
-      .select('id')
-      .eq('image', imageUrls[0])
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .single();
-
+    // Registrar avistamiento inicial con el ID directo del insert
     if (nueva?.id) {
       await fetch('/api/avistamientos', {
         method: 'POST',
