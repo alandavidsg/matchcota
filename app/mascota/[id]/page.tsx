@@ -54,10 +54,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const desc = `${breed}${pet.age ? `, ${pet.age}` : ''} · ${pet.location}. ${pet.description ? pet.description.slice(0, 100) : 'Ayúdame a encontrar un hogar lleno de amor.'}`;
     const url = `${SITE_URL}/mascota/${id}`;
 
-    // Usar Next.js image optimizer para reducir la imagen a ~80KB (WhatsApp requiere < 600KB)
+    // Servir imagen via proxy propio (evita problema de tamaño con WhatsApp)
     const rawImage = pet.image || '';
     const image = rawImage
-      ? `${SITE_URL}/_next/image?url=${encodeURIComponent(rawImage)}&w=1200&q=80`
+      ? `${SITE_URL}/api/og-image?url=${encodeURIComponent(rawImage)}`
       : `${SITE_URL}/og-default.png`;
 
     return {
