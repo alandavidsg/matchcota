@@ -28,6 +28,10 @@ export default function ReportarPage() {
   const [location, setLocation] = useState('Obteniendo ubicación...');
   const [locationReady, setLocationReady] = useState(false);
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
+
+  type Lugar = { id: number; nombre: string; tipo: 'veterinaria' | 'refugio'; distancia: number; lat: number; lng: number; telefono: string | null };
+  const [cercanos, setCercanos] = useState<Lugar[]>([]);
+  const [loadingCercanos, setLoadingCercanos] = useState(false);
   const [form, setForm] = useState({ tipo: '', raza: '', edad: '', color: '', descripcion: '' });
   const [adoptForm, setAdoptForm] = useState({ nombre: '', tipo: '', raza: '', sexo: '', edad: '', color: '', descripcion: '', contactoNombre: '', telefono: '', email: '' });
 
@@ -60,6 +64,16 @@ export default function ReportarPage() {
     }, 6000);
     return () => clearTimeout(fallback);
   }, []);
+
+  useEffect(() => {
+    if (!coords || mode !== 'calle') return;
+    setLoadingCercanos(true);
+    fetch(`/api/cercanos?lat=${coords.lat}&lng=${coords.lng}`)
+      .then((r) => r.json())
+      .then((d) => setCercanos(d.lugares ?? []))
+      .catch(() => setCercanos([]))
+      .finally(() => setLoadingCercanos(false));
+  }, [coords, mode]);
 
   const resizeImage = (base64: string, maxSize = 512): Promise<string> =>
     new Promise((resolve) => {
@@ -318,7 +332,7 @@ export default function ReportarPage() {
     <main suppressHydrationWarning>
       {/* Modal de duplicados */}
       {showDupModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 flex items-end md:items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-end md:items-center justify-center p-4 pb-20 md:pb-4">
           <div className="bg-white rounded-2xl w-full max-w-md max-h-[85vh] overflow-y-auto">
             <div className="p-5 border-b border-gray-100">
               <div className="flex items-center gap-2 text-orange-500 mb-1">
@@ -373,7 +387,7 @@ export default function ReportarPage() {
           </div>
         </div>
       )}
-      <div className="max-w-lg mx-auto px-6 py-10">
+      <div className="max-w-lg mx-auto px-6 pt-10 pb-28 md:pb-10">
         <h1 className="text-2xl font-semibold text-[#1a1a2e] mb-2">
           {mode === 'adopcion' ? 'Dar en adopción mi mascota' : 'Reportar mascota'}
         </h1>
@@ -619,6 +633,46 @@ export default function ReportarPage() {
                     <button type="button" onClick={getLocation} className="text-xs px-3 py-2 rounded-lg bg-orange-100 text-orange-600 flex items-center"><MapPin size={14} /></button>
                   </div>
                 </div>
+              </div>
+            )}
+
+            {/* Lugares cercanos */}
+            {coords && (loadingCercanos || cercanos.length > 0) && (
+              <div className="bg-blue-50 border border-blue-100 rounded-2xl p-5 mb-6">
+                <p className="text-xs font-medium text-blue-600 mb-3 flex items-center gap-1">
+                  <MapPin size={13} /> Lugares cercanos que pueden ayudar
+                </p>
+                {loadingCercanos ? (
+                  <div className="flex items-center gap-2 text-blue-400 text-xs">
+                    <div className="flex gap-1">
+                      {[0,1,2].map((i) => <div key={i} className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />)}
+                    </div>
+                    Buscando veterinarias y refugios...
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-2">
+                    {cercanos.map((lugar) => (
+                      <div key={lugar.id} className="flex items-center gap-3 bg-white rounded-xl p-3">
+                        <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 text-lg ${lugar.tipo === 'veterinaria' ? 'bg-blue-100' : 'bg-green-100'}`}>
+                          {lugar.tipo === 'veterinaria' ? '🏥' : '🏠'}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-[#1a1a2e] truncate">{lugar.nombre}</p>
+                          <p className="text-xs text-gray-400 capitalize">
+                            {lugar.tipo} · {lugar.distancia < 1 ? `${Math.round(lugar.distancia * 1000)} m` : `${lugar.distancia} km`}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${lugar.lat},${lugar.lng}`, '_blank')}
+                          className="shrink-0 text-xs text-blue-600 border border-blue-200 bg-white px-3 py-1.5 rounded-lg font-medium"
+                        >
+                          Ir
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 

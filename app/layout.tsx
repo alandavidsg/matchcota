@@ -1,16 +1,18 @@
-  import type { Metadata } from 'next';
-  import './globals.css';
-  import { Camera, PawPrint, Map, Search, BookOpen, Heart } from 'lucide-react';
+import type { Metadata } from 'next';
+import './globals.css';
+import { Camera, PawPrint, Map, Search, BookOpen, Heart } from 'lucide-react';
+import { ThemeProvider, ThemeToggle } from './components/ThemeProvider';
 
-  export const metadata: Metadata = {
-    title: 'PetMatch - Adopta una mascota',
-    description: 'Conectando mascotas de la calle con hogares llenos de amor en Chile',
-  };
+export const metadata: Metadata = {
+  title: 'PetMatch - Adopta una mascota',
+  description: 'Conectando mascotas de la calle con hogares llenos de amor en Chile',
+};
 
-  export default function RootLayout({ children }: { children: React.ReactNode }) {
-    return (
-      <html lang="es">
-        <body className="pb-16 md:pb-0">
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="es">
+      <body className="pb-16 md:pb-0 bg-white dark:bg-[#0a0a14] transition-colors duration-300">
+        <ThemeProvider>
           {/* Top bar — solo desktop */}
           <div className="hidden md:flex bg-[#12122a] px-8 py-2 items-center justify-between text-xs text-white/40">
             <span>Ayudando a mascotas desde 2026</span>
@@ -21,23 +23,27 @@
             </div>
           </div>
 
-          {/* Navbar desktop */}
+          {/* Navbar */}
           <nav className="bg-[#1a1a2e] px-6 md:px-8 py-4 flex items-center justify-between">
             <a href="/" className="text-white text-xl font-semibold tracking-tight flex items-center gap-1.5">
               <PawPrint size={20} className="text-orange-500" />
               Pet<span className="text-orange-500">Match</span>
             </a>
-            {/* Links solo en desktop */}
-            <div className="hidden md:flex items-center gap-4">
-              <a href="/catalogo" className="text-white/60 hover:text-white text-sm transition">Catálogo</a>
-              <a href="/mapa" className="text-white/60 hover:text-white text-sm transition flex items-center gap-1"><Map size={14} />Mapa</a>
-              <a href="/perdidos" className="text-white/60 hover:text-white text-sm transition flex items-center gap-1"><Search size={14} />Perdidos</a>
-              <a href="/reportar" className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-1.5"><Camera size={15} />Reportar</a>
+            <div className="flex items-center gap-3">
+              {/* Links solo desktop */}
+              <div className="hidden md:flex items-center gap-4">
+                <a href="/catalogo" className="text-white/60 hover:text-white text-sm transition">Catálogo</a>
+                <a href="/mapa" className="text-white/60 hover:text-white text-sm transition flex items-center gap-1"><Map size={14} />Mapa</a>
+                <a href="/perdidos" className="text-white/60 hover:text-white text-sm transition flex items-center gap-1"><Search size={14} />Perdidos</a>
+                <a href="/reportar" className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-1.5"><Camera size={15} />Reportar</a>
+              </div>
+              {/* Botón reportar móvil */}
+              <a href="/reportar" className="md:hidden bg-orange-500 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-1.5">
+                <Camera size={15} />Reportar
+              </a>
+              {/* Toggle dark/light — siempre visible */}
+              <ThemeToggle />
             </div>
-            {/* Botón reportar en móvil */}
-            <a href="/reportar" className="md:hidden bg-orange-500 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-1.5">
-              <Camera size={15} />Reportar
-            </a>
           </nav>
 
           {children}
@@ -98,7 +104,8 @@
               <span className="text-[10px]">FAQ</span>
             </a>
           </nav>
-        </body>
-      </html>
-    );
-  }
+        </ThemeProvider>
+      </body>
+    </html>
+  );
+}

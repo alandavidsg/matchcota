@@ -1,5 +1,67 @@
 @import "tailwindcss";
 
+/* ── Dark mode (class-based) ── */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Base */
+.dark body {
+  background-color: #0a0a14;
+  color: #e2e8f0;
+}
+
+/* Backgrounds */
+.dark .bg-white        { background-color: #1e1e32 !important; }
+.dark .bg-gray-50      { background-color: #16162a !important; }
+.dark .bg-gray-100     { background-color: #1a1a2e !important; }
+.dark .bg-orange-50    { background-color: #2a1a0e !important; }
+.dark .bg-blue-50      { background-color: #0e1628 !important; }
+.dark .bg-red-50       { background-color: #2a0e0e !important; }
+.dark .bg-green-50     { background-color: #0e2a0e !important; }
+
+/* Text */
+.dark .text-gray-400   { color: #8899bb !important; }
+.dark .text-gray-500   { color: #8899bb !important; }
+.dark .text-gray-600   { color: #aabbcc !important; }
+.dark .text-gray-700   { color: #ccd8e8 !important; }
+.dark .text-gray-800   { color: #dde8f4 !important; }
+.dark .text-gray-900   { color: #e8f0fa !important; }
+
+/* Hardcoded dark color used across el app */
+.dark .text-\[\#1a1a2e\] { color: #e2e8f0 !important; }
+
+/* Borders */
+.dark .border-gray-100  { border-color: #2a2a4a !important; }
+.dark .border-gray-200  { border-color: #2a2a4a !important; }
+.dark .border-orange-100 { border-color: #3a2010 !important; }
+.dark .border-blue-100  { border-color: #102030 !important; }
+.dark .border-red-100   { border-color: #3a1010 !important; }
+
+/* Inputs y selects */
+.dark input:not([type="range"]),
+.dark select,
+.dark textarea {
+  background-color: #16162a !important;
+  color: #e2e8f0 !important;
+  border-color: #2a2a4a !important;
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: #556677 !important;
+}
+
+/* Bottom nav móvil */
+.dark nav.fixed.bottom-0 {
+  background-color: #1e1e32 !important;
+  border-color: #2a2a4a !important;
+}
+.dark nav.fixed.bottom-0 a {
+  color: #667788 !important;
+}
+.dark nav.fixed.bottom-0 a:hover {
+  color: #f97316 !important;
+}
+
 @keyframes newsScroll {
   0%   { transform: translateX(0); }
   100% { transform: translateX(-50%); }
