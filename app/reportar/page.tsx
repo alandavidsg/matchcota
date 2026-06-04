@@ -498,8 +498,17 @@ export default function ReportarPage() {
                     <option value="No lo sé">No lo sé</option>
                   </select>
                 </div>
+                <div>
+                  <label className="text-xs text-gray-400 block mb-1">Edad</label>
+                  <select value={adoptForm.edad} onChange={(e) => setAdoptForm({ ...adoptForm, edad: e.target.value })} className="w-full text-sm px-3 py-2 rounded-lg border border-gray-200 bg-white focus:outline-none focus:border-orange-400" style={{ fontSize: '16px' }}>
+                    <option value="">Seleccionar</option>
+                    <option value="Cachorro">Cachorro</option>
+                    <option value="Joven">Joven</option>
+                    <option value="Adulto">Adulto</option>
+                    <option value="Senior">Senior</option>
+                  </select>
+                </div>
                 {[
-                  { label: 'Edad', key: 'edad', placeholder: 'Ej: 2 años, Cachorro' },
                   { label: 'Color', key: 'color', placeholder: 'Ej: Café con blanco' },
                   { label: 'Descripción', key: 'descripcion', placeholder: 'Cuéntanos sobre su personalidad...' },
                 ].map((f) => (
@@ -615,12 +624,22 @@ export default function ReportarPage() {
                   {form.tipo ? <><Sparkles size={13} /> Detectado por IA — edita si es necesario</> : <><PenLine size={13} /> Completa los datos de la mascota</>}
                 </p>
                 <div className="grid grid-cols-2 gap-3 mb-3">
-                  {[{ label: 'Tipo de animal', key: 'tipo' }, { label: 'Raza', key: 'raza' }, { label: 'Edad aprox.', key: 'edad' }, { label: 'Color', key: 'color' }].map((f) => (
+                  {[{ label: 'Tipo de animal', key: 'tipo' }, { label: 'Raza', key: 'raza' }, { label: 'Color', key: 'color' }].map((f) => (
                     <div key={f.key}>
                       <label className="text-xs text-gray-400 block mb-1">{f.label}</label>
                       <input value={form[f.key as keyof typeof form]} onChange={(e) => setForm({ ...form, [f.key]: e.target.value })} className="w-full text-sm px-3 py-2 rounded-lg border border-gray-200 bg-white focus:outline-none focus:border-orange-400" style={{ fontSize: '16px' }} />
                     </div>
                   ))}
+                  <div>
+                    <label className="text-xs text-gray-400 block mb-1">Edad aprox.</label>
+                    <select value={form.edad} onChange={(e) => setForm({ ...form, edad: e.target.value })} className="w-full text-sm px-3 py-2 rounded-lg border border-gray-200 bg-white focus:outline-none focus:border-orange-400" style={{ fontSize: '16px' }}>
+                      <option value="">Seleccionar</option>
+                      <option value="Cachorro">Cachorro</option>
+                      <option value="Joven">Joven</option>
+                      <option value="Adulto">Adulto</option>
+                      <option value="Senior">Senior</option>
+                    </select>
+                  </div>
                 </div>
                 <div className="mb-3">
                   <label className="text-xs text-gray-400 block mb-1">Descripción</label>
