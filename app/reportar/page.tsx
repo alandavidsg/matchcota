@@ -35,8 +35,21 @@ export default function ReportarPage() {
   const [form, setForm] = useState({ tipo: '', raza: '', edad: '', color: '', descripcion: '' });
   const [adoptForm, setAdoptForm] = useState({ nombre: '', tipo: '', raza: '', sexo: '', edad: '', color: '', descripcion: '', contactoNombre: '', telefono: '', email: '' });
 
+  const getLocationFromIP = async () => {
+    try {
+      const res = await fetch('https://ipapi.co/json/');
+      const data = await res.json();
+      const city = data.city || '';
+      const region = data.region || '';
+      setLocation(city ? (region ? `${city}, ${region}` : city) : '');
+    } catch {
+      setLocation('');
+    }
+    setLocationReady(true);
+  };
+
   const getLocation = () => {
-    if (!navigator.geolocation) { setLocation('Geolocalización no disponible'); setLocationReady(true); return; }
+    if (!navigator.geolocation) { getLocationFromIP(); return; }
     setLocation('Obteniendo ubicación...');
     setLocationReady(false);
     navigator.geolocation.getCurrentPosition(
@@ -52,7 +65,7 @@ export default function ReportarPage() {
         } catch { setLocation(`${latitude.toFixed(4)}, ${longitude.toFixed(4)}`); }
         setLocationReady(true);
       },
-      (err) => { setLocation(err.code === 1 ? 'Permiso de ubicación denegado' : 'No se pudo obtener ubicación'); setLocationReady(true); },
+      async () => { await getLocationFromIP(); },
       { timeout: 15000, enableHighAccuracy: true, maximumAge: 60000 }
     );
   };
