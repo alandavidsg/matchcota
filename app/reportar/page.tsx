@@ -254,6 +254,15 @@ export default function ReportarPage() {
       .catch(() => { setForm({ tipo: '', raza: '', edad: '', color: '', descripcion: '' }); setAnalyzing(false); });
   };
 
+  // Asigna la mascota recién publicada al refugio más cercano y lo notifica (no bloquea)
+  const asignarRefugioCercano = (mascotaId: number) => {
+    fetch('/api/refugios/asignar', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mascota_id: mascotaId }),
+    }).catch(() => {});
+  };
+
   const handleAdoptSubmit = async () => {
     if (!files.length) return;
     setSubmitting(true);
@@ -285,6 +294,7 @@ export default function ReportarPage() {
     }).select('id').single();
 
     if (error) { alert('Error guardando mascota. Intenta de nuevo.'); setSubmitting(false); return; }
+    if (nueva?.id) asignarRefugioCercano(nueva.id);
     setSubmitted(true);
     setTimeout(() => router.push(nueva?.id ? `/mascota/${nueva.id}` : '/'), 2500);
   };
@@ -337,6 +347,7 @@ export default function ReportarPage() {
       });
     }
 
+    if (nueva?.id) asignarRefugioCercano(nueva.id);
     setShowDupModal(false);
     setSubmitted(true);
     setTimeout(() => router.push(nueva?.id ? `/mascota/${nueva.id}` : '/'), 2500);

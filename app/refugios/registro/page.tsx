@@ -14,12 +14,27 @@ export default function RefugioRegistro() {
     nombre: '', email: '', password: '', confirmar: '',
     telefono: '', region: '', descripcion: '',
   });
+  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [geoStatus, setGeoStatus] = useState<'idle' | 'loading' | 'ok' | 'error'>('idle');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [done, setDone] = useState(false);
 
   function set(key: string, value: string) {
     setForm((prev) => ({ ...prev, [key]: value }));
+  }
+
+  function capturarUbicacion() {
+    if (!navigator.geolocation) { setGeoStatus('error'); return; }
+    setGeoStatus('loading');
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        setGeoStatus('ok');
+      },
+      () => setGeoStatus('error'),
+      { timeout: 15000, enableHighAccuracy: true, maximumAge: 60000 }
+    );
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -46,6 +61,8 @@ export default function RefugioRegistro() {
         telefono: form.telefono,
         region: form.region,
         descripcion: form.descripcion,
+        lat: coords?.lat ?? null,
+        lng: coords?.lng ?? null,
       }),
     });
 
@@ -159,6 +176,29 @@ export default function RefugioRegistro() {
                 </select>
               </div>
             </div>
+          </div>
+
+          {/* Ubicación del refugio */}
+          <div>
+            <label className="text-xs text-gray-400 block mb-1">Ubicación del refugio</label>
+            <button
+              type="button"
+              onClick={capturarUbicacion}
+              className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-lg border text-sm transition ${
+                geoStatus === 'ok'
+                  ? 'border-green-300 bg-green-50 text-green-600'
+                  : 'border-gray-200 text-gray-500 hover:border-orange-400'
+              }`}
+            >
+              <MapPin size={15} />
+              {geoStatus === 'loading' ? 'Obteniendo ubicación...'
+                : geoStatus === 'ok' ? 'Ubicación capturada ✓'
+                : geoStatus === 'error' ? 'No se pudo obtener — reintentar'
+                : 'Usar mi ubicación actual'}
+            </button>
+            <p className="text-[11px] text-gray-400 mt-1">
+              Nos ayuda a asignarte las mascotas reportadas cerca de tu refugio.
+            </p>
           </div>
 
           {/* Descripción */}

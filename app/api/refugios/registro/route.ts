@@ -1,12 +1,34 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '../../../../lib/supabase-admin';
 
+// Geocodifica una región de Chile a coordenadas aproximadas (centro de la región)
+async function geocodeRegion(region: string): Promise<{ lat: number; lng: number } | null> {
+  try {
+    const q = encodeURIComponent(`${region}, Chile`);
+    const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${q}&format=json&limit=1`, {
+      headers: { 'User-Agent': 'Matchcota/1.0' },
+    });
+    const data = await res.json();
+    if (data?.[0]?.lat && data?.[0]?.lon) {
+      return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+    }
+  } catch { /* sin geocodificación */ }
+  return null;
+}
+
 export async function POST(req: NextRequest) {
   try {
-    const { nombre, email, password, telefono, region, descripcion } = await req.json();
+    const { nombre, email, password, telefono, region, descripcion, lat, lng } = await req.json();
 
     if (!nombre || !email || !password) {
       return NextResponse.json({ error: 'Nombre, email y contraseña son requeridos' }, { status: 400 });
+    }
+
+    // Coordenadas: GPS del navegador si lo compartió, si no el centro de la región
+    let coords: { lat: number; lng: number } | null =
+      typeof lat === 'number' && typeof lng === 'number' ? { lat, lng } : null;
+    if (!coords && region) {
+      coords = await geocodeRegion(region);
     }
 
     // 1. Crear usuario en Supabase Auth
@@ -32,6 +54,8 @@ export async function POST(req: NextRequest) {
       region: region || null,
       descripcion: descripcion || null,
       aprobado: true,
+      lat: coords?.lat ?? null,
+      lng: coords?.lng ?? null,
     });
 
     if (refugioError) {
