@@ -198,6 +198,16 @@ export default function ReportarPage() {
     await processMainPhoto(base64);
   };
 
+  // Al cargar la imagen en el editor, preselecciona un recuadro centrado al 90%
+  const onCropImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    const { width, height } = e.currentTarget;
+    const w = width * 0.9;
+    const h = height * 0.9;
+    const px: PixelCrop = { unit: 'px', x: (width - w) / 2, y: (height - h) / 2, width: w, height: h };
+    setCrop(px);
+    setCompletedCrop(px);
+  };
+
   const cancelCrop = () => {
     setCropSrc(null);
     setCrop(undefined);
@@ -421,6 +431,7 @@ export default function ReportarPage() {
                 ref={cropImgRef}
                 src={cropSrc}
                 alt="Recortar foto"
+                onLoad={onCropImageLoad}
                 style={{ maxHeight: '65vh', maxWidth: '100%', objectFit: 'contain' }}
               />
             </ReactCrop>
