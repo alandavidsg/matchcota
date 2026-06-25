@@ -3,8 +3,10 @@
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '../../lib/supabase';
-import { ArrowLeft, Camera, Home, MapPin, Phone, CheckCircle, Sparkles, PenLine, AlertTriangle, Eye } from 'lucide-react';
+import { ArrowLeft, Camera, Home, MapPin, Phone, CheckCircle, Sparkles, PenLine, AlertTriangle, Eye, Crop as CropIcon } from 'lucide-react';
 import exifr from 'exifr';
+import ReactCrop, { type Crop, type PixelCrop } from 'react-image-crop';
+import 'react-image-crop/dist/ReactCrop.css';
 
 export default function ReportarPage() {
   const router = useRouter();
@@ -16,6 +18,12 @@ export default function ReportarPage() {
   const [files, setFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
   const [analyzing, setAnalyzing] = useState(false);
+
+  // Recorte de la foto principal
+  const cropImgRef = useRef<HTMLImageElement>(null);
+  const [cropSrc, setCropSrc] = useState<string | null>(null);
+  const [crop, setCrop] = useState<Crop>();
+  const [completedCrop, setCompletedCrop] = useState<PixelCrop>();
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
@@ -145,13 +153,55 @@ export default function ReportarPage() {
   const handleFirstPhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
     if (!f) return;
-    // Intentar leer GPS del EXIF (fotos de galería)
+    // Intentar leer GPS del EXIF (fotos de galería) desde el archivo original
     extractGpsFromFile(f);
     const base64 = await readFile(f);
-    setFiles([f]);
+    // Abrir el editor de recorte antes de procesar
+    setCrop(undefined);
+    setCompletedCrop(undefined);
+    setCropSrc(base64);
+    e.target.value = '';
+  };
+
+  // Genera el recorte como JPEG a partir de la selección sobre la imagen mostrada
+  const getCroppedBase64 = (image: HTMLImageElement, c: PixelCrop): string => {
+    const scaleX = image.naturalWidth / image.width;
+    const scaleY = image.naturalHeight / image.height;
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.round(c.width * scaleX);
+    canvas.height = Math.round(c.height * scaleY);
+    const ctx = canvas.getContext('2d')!;
+    ctx.drawImage(
+      image,
+      c.x * scaleX, c.y * scaleY, c.width * scaleX, c.height * scaleY,
+      0, 0, canvas.width, canvas.height
+    );
+    return canvas.toDataURL('image/jpeg', 0.85);
+  };
+
+  // Procesa una foto principal (recortada o no) e inicia el análisis
+  const processMainPhoto = async (base64: string) => {
+    const blob = await (await fetch(base64)).blob();
+    const file = new File([blob], `foto-${Date.now()}.jpg`, { type: 'image/jpeg' });
+    setFiles([file]);
     setPreviews([base64]);
     const resized = await resizeImage(base64);
     analyzePhoto(resized);
+  };
+
+  const confirmCrop = async () => {
+    if (!cropSrc) return;
+    const img = cropImgRef.current;
+    const useCrop = img && completedCrop && completedCrop.width > 8 && completedCrop.height > 8;
+    const base64 = useCrop ? getCroppedBase64(img, completedCrop) : cropSrc;
+    setCropSrc(null);
+    await processMainPhoto(base64);
+  };
+
+  const cancelCrop = () => {
+    setCropSrc(null);
+    setCrop(undefined);
+    setCompletedCrop(undefined);
   };
 
   const handleExtraPhotos = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -220,7 +270,7 @@ export default function ReportarPage() {
 
     if (!imageUrls.length) { alert('Error subiendo imágenes. Intenta de nuevo.'); setSubmitting(false); return; }
 
-    const { error } = await supabase.from('mascotas').insert({
+    const { data: nueva, error } = await supabase.from('mascotas').insert({
       name: adoptForm.nombre || `${adoptForm.tipo} en adopción`,
       type: adoptForm.tipo,
       breed: adoptForm.raza,
@@ -232,11 +282,11 @@ export default function ReportarPage() {
       available: true,
       lat: coords?.lat ?? null,
       lng: coords?.lng ?? null,
-    });
+    }).select('id').single();
 
     if (error) { alert('Error guardando mascota. Intenta de nuevo.'); setSubmitting(false); return; }
     setSubmitted(true);
-    setTimeout(() => router.push('/'), 2500);
+    setTimeout(() => router.push(nueva?.id ? `/mascota/${nueva.id}` : '/'), 2500);
   };
 
   // Publica la mascota como nueva (sin duplicado)
@@ -289,7 +339,7 @@ export default function ReportarPage() {
 
     setShowDupModal(false);
     setSubmitted(true);
-    setTimeout(() => router.push('/'), 2500);
+    setTimeout(() => router.push(nueva?.id ? `/mascota/${nueva.id}` : '/'), 2500);
   };
 
   // Registra avistamiento en mascota existente
@@ -317,7 +367,7 @@ export default function ReportarPage() {
     });
     setShowDupModal(false);
     setSubmitted(true);
-    setTimeout(() => router.push('/'), 2500);
+    setTimeout(() => router.push(`/mascota/${mascotaId}`), 2500);
   };
 
   const handleSubmit = async () => {
@@ -343,6 +393,44 @@ export default function ReportarPage() {
 
   return (
     <main suppressHydrationWarning>
+      {/* Modal de recorte de la foto principal */}
+      {cropSrc && (
+        <div className="fixed inset-0 z-[60] bg-black/90 flex flex-col items-center justify-center p-4">
+          <div className="flex items-center gap-2 text-white mb-4 text-sm font-medium">
+            <CropIcon size={16} /> Recorta la foto (arrastra para ajustar)
+          </div>
+          <div className="max-w-full max-h-[65vh] overflow-hidden flex items-center justify-center">
+            <ReactCrop
+              crop={crop}
+              onChange={(c) => setCrop(c)}
+              onComplete={(c) => setCompletedCrop(c)}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                ref={cropImgRef}
+                src={cropSrc}
+                alt="Recortar foto"
+                style={{ maxHeight: '65vh', maxWidth: '100%', objectFit: 'contain' }}
+              />
+            </ReactCrop>
+          </div>
+          <div className="flex gap-3 mt-5 w-full max-w-md">
+            <button
+              onClick={cancelCrop}
+              className="flex-1 py-3 rounded-xl bg-white/10 text-white font-medium text-sm hover:bg-white/20 transition"
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={confirmCrop}
+              className="flex-1 py-3 rounded-xl bg-orange-500 text-white font-medium text-sm hover:bg-orange-600 transition"
+            >
+              Usar foto
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Modal de duplicados */}
       {showDupModal && (
         <div className="fixed inset-0 z-50 bg-black/60 flex items-end md:items-center justify-center p-4 pb-20 md:pb-4">
