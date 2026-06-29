@@ -19,6 +19,7 @@ export default function ProximamentePage() {
         .proximamente-root {
           position: fixed;
           inset: 0;
+          z-index: 9999;
           overflow: hidden;
           background:
             radial-gradient(1200px 600px at 50% -10%, #2a2a4a 0%, transparent 60%),
