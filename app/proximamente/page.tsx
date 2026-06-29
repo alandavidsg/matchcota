@@ -114,11 +114,14 @@ export default function ProximamentePage() {
           line-height: 1;
         }
         .proximamente-logo span { color: #e86c00; }
-        .proximamente-paw-emoji {
-          font-size: clamp(48px, 12vw, 72px);
+        .proximamente-paws {
+          width: clamp(96px, 24vw, 140px);
+          height: auto;
           display: block;
-          margin-bottom: 18px;
+          margin: 0 auto 18px;
+          filter: drop-shadow(0 4px 14px rgba(232,108,0,0.35));
           animation: wiggle 3.5s ease-in-out infinite;
+          transform-origin: center;
         }
         @keyframes wiggle {
           0%, 100% { transform: rotate(-8deg); }
@@ -186,7 +189,24 @@ export default function ProximamentePage() {
           <span className="proximamente-dot" /> Próximamente
         </span>
 
-        <span className="proximamente-paw-emoji">🐾</span>
+        <svg className="proximamente-paws" viewBox="0 0 130 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          {/* Patita grande */}
+          <g transform="translate(6 36)" fill="#e86c00">
+            <ellipse cx="30" cy="40" rx="12" ry="9.5"/>
+            <ellipse cx="15" cy="30" rx="5" ry="6.7" transform="rotate(-20 15 30)"/>
+            <ellipse cx="25" cy="20" rx="5.4" ry="7"/>
+            <ellipse cx="35" cy="20" rx="5.4" ry="7"/>
+            <ellipse cx="45" cy="30" rx="5" ry="6.7" transform="rotate(20 45 30)"/>
+          </g>
+          {/* Patita chica */}
+          <g transform="translate(70 2) scale(0.72)" fill="#ff8a3d">
+            <ellipse cx="30" cy="40" rx="12" ry="9.5"/>
+            <ellipse cx="15" cy="30" rx="5" ry="6.7" transform="rotate(-20 15 30)"/>
+            <ellipse cx="25" cy="20" rx="5.4" ry="7"/>
+            <ellipse cx="35" cy="20" rx="5.4" ry="7"/>
+            <ellipse cx="45" cy="30" rx="5" ry="6.7" transform="rotate(20 45 30)"/>
+          </g>
+        </svg>
         <h1 className="proximamente-logo">Match<span>cota</span></h1>
 
         <p className="proximamente-tagline">
