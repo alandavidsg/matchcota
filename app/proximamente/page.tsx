@@ -198,6 +198,8 @@ export default function ProximamentePage() {
         <div className="proximamente-socials">
           <a href="https://www.instagram.com/matchcotacl/" target="_blank" rel="noopener noreferrer">Instagram</a>
           <a href="https://www.tiktok.com/@matchcotacl" target="_blank" rel="noopener noreferrer">TikTok</a>
+          <a href="https://web.facebook.com/profile.php?id=61590666848826&sk=directory_intro" target="_blank" rel="noopener noreferrer">Facebook</a>
+          <a href="https://x.com/matchcotacl" target="_blank" rel="noopener noreferrer">X</a>
         </div>
 
         <p className="proximamente-foot">© 2026 Matchcota · Adopción de mascotas en Chile</p>
