@@ -162,7 +162,7 @@ export default function ProximamentePage() {
       {/* Video de fondo en loop */}
       <video
         className="proximamente-video"
-        src="/hero.mp4"
+        src="/proximamente.mp4"
         autoPlay
         muted
         loop
