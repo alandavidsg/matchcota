@@ -4,7 +4,7 @@ import { Camera, PawPrint, Map, Search, BookOpen, Heart } from 'lucide-react';
 import { ThemeProvider, ThemeToggle } from './components/ThemeProvider';
 
 export const metadata: Metadata = {
-  title: 'PetMatch - Adopta una mascota',
+  title: 'Matchcota - Adopta una mascota',
   description: 'Conectando mascotas de la calle con hogares llenos de amor en Chile',
 };
 
@@ -27,7 +27,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <nav className="bg-[#1a1a2e] px-6 md:px-8 py-4 flex items-center justify-between">
             <a href="/" className="text-white text-xl font-semibold tracking-tight flex items-center gap-1.5">
               <PawPrint size={20} className="text-orange-500" />
-              Pet<span className="text-orange-500">Match</span>
+              <span>Match<span className="text-orange-500">Cota</span></span>
             </a>
             <div className="flex items-center gap-3">
               {/* Links solo desktop */}
@@ -51,7 +51,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <footer className="bg-[#1a1a2e] mt-8">
             <div className="max-w-5xl mx-auto px-8 py-12 grid grid-cols-1 md:grid-cols-3 gap-8">
               <div>
-                <div className="text-white text-lg font-semibold mb-3 flex items-center gap-1.5"><PawPrint size={18} className="text-orange-500" />Pet<span className="text-orange-500">Match</span></div>
+                <div className="text-white text-lg font-semibold mb-3 flex items-center gap-1.5"><PawPrint size={18} className="text-orange-500" /><span>Match<span className="text-orange-500">Cota</span></span></div>
                 <p className="text-white/40 text-sm leading-relaxed">Conectando mascotas de la calle con hogares llenos de amor en Chile.</p>
               </div>
               <div>
@@ -69,15 +69,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <div>
                 <div className="text-white text-sm font-medium mb-3">Redes sociales</div>
                 <div className="flex flex-col gap-2">
-                  <a href="https://instagram.com" target="_blank" className="text-white/40 hover:text-white text-sm transition">Instagram</a>
-                  <a href="https://facebook.com" target="_blank" className="text-white/40 hover:text-white text-sm transition">Facebook</a>
-                  <a href="https://tiktok.com" target="_blank" className="text-white/40 hover:text-white text-sm transition">TikTok</a>
+                  <a href="https://www.instagram.com/matchcotacl/" target="_blank" className="text-white/40 hover:text-white text-sm transition">Instagram</a>
+                  <a href="https://web.facebook.com/profile.php?id=61590666848826&sk=directory_intro" target="_blank" className="text-white/40 hover:text-white text-sm transition">Facebook</a>
+                  <a href="https://www.tiktok.com/@matchcotacl" target="_blank" className="text-white/40 hover:text-white text-sm transition">TikTok</a>
                   <a href="https://twitter.com" target="_blank" className="text-white/40 hover:text-white text-sm transition">X / Twitter</a>
                 </div>
               </div>
             </div>
             <div className="border-t border-white/10 px-8 py-4 text-center text-white/20 text-xs">
-              2026 PetMatch · Todos los derechos reservados
+              2026 Matchcota · Todos los derechos reservados
             </div>
           </footer>
 

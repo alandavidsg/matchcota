@@ -27,7 +27,7 @@ export default function LoginPage() {
     <main className="min-h-screen bg-[#1a1a2e] flex items-center justify-center px-4">
       <div className="bg-white rounded-2xl p-10 w-full max-w-sm text-center shadow-2xl">
         <div className="text-5xl mb-4">🐾</div>
-        <h1 className="text-2xl font-bold text-[#1a1a2e] mb-1">PetMatch</h1>
+        <h1 className="text-2xl font-bold text-[#1a1a2e] mb-1">Matchcota</h1>
         <p className="text-gray-400 text-sm mb-8">Sitio en modo privado. Ingresa la contraseña para continuar.</p>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">

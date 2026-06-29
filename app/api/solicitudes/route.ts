@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
       const siteUrl = 'https://petmatch-gamma.vercel.app';
 
       await resend.emails.send({
-        from: 'PetMatch <notificaciones@petmatch-gamma.vercel.app>',
+        from: 'Matchcota <notificaciones@petmatch-gamma.vercel.app>',
         to: destinatario,
         subject: `🐾 Nueva solicitud de adopción para ${petName}`,
         html: `
@@ -75,7 +75,7 @@ export async function POST(req: NextRequest) {
         <!-- Header -->
         <tr>
           <td style="background:#1a1a2e;padding:28px 32px;text-align:center;">
-            <span style="font-size:28px;font-weight:bold;color:#e86c00;">PetMatch</span>
+            <span style="font-size:28px;font-weight:bold;color:#e86c00;">Matchcota</span>
             <p style="color:#aaaaaa;font-size:13px;margin:6px 0 0;">Plataforma de adopción de mascotas</p>
           </td>
         </tr>
@@ -153,8 +153,8 @@ export async function POST(req: NextRequest) {
         <tr>
           <td style="background:#f9f9f9;padding:16px 32px;text-align:center;border-top:1px solid #eeeeee;">
             <p style="margin:0;font-size:12px;color:#aaaaaa;">
-              Este email fue enviado automáticamente por PetMatch.<br>
-              <a href="${siteUrl}" style="color:#e86c00;text-decoration:none;">petmatch-gamma.vercel.app</a>
+              Este email fue enviado automáticamente por Matchcota.<br>
+              <a href="${siteUrl}" style="color:#e86c00;text-decoration:none;">matchcota.vercel.app</a>
             </p>
           </td>
         </tr>

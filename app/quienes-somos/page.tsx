@@ -14,7 +14,7 @@ export default function QuienesSomos() {
         <div className="bg-white rounded-2xl border border-gray-100 p-8 mb-6">
           <h2 className="text-xl font-semibold text-[#1a1a2e] mb-4">Nuestra misión</h2>
           <p className="text-gray-500 text-sm leading-relaxed">
-            PetMatch nació con el objetivo de reducir la cantidad de mascotas en situación de calle en Chile.
+            Matchcota nació con el objetivo de reducir la cantidad de mascotas en situación de calle en Chile.
             Usamos tecnología e inteligencia artificial para facilitar el proceso de reporte y adopción,
             conectando a personas que quieren ayudar con mascotas que necesitan un hogar.
           </p>

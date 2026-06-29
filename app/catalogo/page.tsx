@@ -30,7 +30,7 @@ function CatalogoContent() {
   const [favorites, setFavorites] = useState<number[]>([]);
 
   useEffect(() => {
-    const saved = localStorage.getItem('petmatch_favorites');
+    const saved = localStorage.getItem('matchcota_favorites');
     if (saved) setFavorites(JSON.parse(saved));
   }, []);
 
@@ -56,7 +56,7 @@ function CatalogoContent() {
     e.preventDefault();
     setFavorites((prev) => {
       const updated = prev.includes(id) ? prev.filter((f) => f !== id) : [...prev, id];
-      localStorage.setItem('petmatch_favorites', JSON.stringify(updated));
+      localStorage.setItem('matchcota_favorites', JSON.stringify(updated));
       return updated;
     });
   };

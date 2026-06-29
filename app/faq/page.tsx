@@ -13,7 +13,7 @@ const faqs = [
       },
       {
         q: '¿Tiene algún costo adoptar?',
-        a: 'No, la adopción es completamente gratuita. PetMatch es una plataforma sin fines de lucro. Si quieres apoyar nuestra causa, puedes hacer una donación voluntaria.',
+        a: 'No, la adopción es completamente gratuita. Matchcota es una plataforma sin fines de lucro. Si quieres apoyar nuestra causa, puedes hacer una donación voluntaria.',
       },
       {
         q: '¿Cuánto demora el proceso de adopción?',
@@ -72,24 +72,24 @@ const faqs = [
       },
       {
         q: '¿Las donaciones tienen boleta o recibo?',
-        a: 'Por el momento no emitimos boletas tributarias. Si realizas una transferencia y necesitas un comprobante, escríbenos a donaciones@petmatch.cl y te lo enviamos.',
+        a: 'Por el momento no emitimos boletas tributarias. Si realizas una transferencia y necesitas un comprobante, escríbenos a donaciones@matchcota.cl y te lo enviamos.',
       },
     ],
   },
   {
-    category: 'Sobre PetMatch',
+    category: 'Sobre Matchcota',
     items: [
       {
-        q: '¿PetMatch tiene app móvil?',
+        q: '¿Matchcota tiene app móvil?',
         a: 'Aún no contamos con una app nativa, pero nuestro sitio está optimizado para móviles y funciona como una app desde el navegador. Puedes agregarlo a tu pantalla de inicio para acceso rápido.',
       },
       {
         q: '¿En qué regiones de Chile opera?',
-        a: 'PetMatch opera en todo Chile. Puedes filtrar por región en el catálogo para ver mascotas cerca de ti, desde Arica y Parinacota hasta Magallanes.',
+        a: 'Matchcota opera en todo Chile. Puedes filtrar por región en el catálogo para ver mascotas cerca de ti, desde Arica y Parinacota hasta Magallanes.',
       },
       {
         q: '¿Cómo puedo contactarlos?',
-        a: 'Puedes escribirnos a través de la sección Contacto del sitio o directamente al correo contacto@petmatch.cl. También estamos en Instagram, Facebook y TikTok.',
+        a: 'Puedes escribirnos a través de la sección Contacto del sitio o directamente al correo contacto@matchcota.cl. También estamos en Instagram, Facebook y TikTok.',
       },
     ],
   },
@@ -127,7 +127,7 @@ export default function FaqPage() {
         </div>
         <h1 className="text-white text-4xl font-semibold mb-3">Preguntas frecuentes</h1>
         <p className="text-white/50 text-base max-w-md mx-auto">
-          Todo lo que necesitas saber sobre PetMatch
+          Todo lo que necesitas saber sobre Matchcota
         </p>
       </section>
 

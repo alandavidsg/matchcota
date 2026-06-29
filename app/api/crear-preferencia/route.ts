@@ -23,8 +23,8 @@ export async function POST(req: NextRequest) {
       body: JSON.stringify({
         items: [
           {
-            id: 'donacion-petmatch',
-            title: 'Donación PetMatch',
+            id: 'donacion-matchcota',
+            title: 'Donación Matchcota',
             description: 'Ayuda a rescatar, alimentar y encontrar hogar para mascotas callejeras.',
             quantity: 1,
             unit_price: amount,
@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
           pending: `${baseUrl}/donar/gracias`,
         },
         auto_return: 'approved',
-        statement_descriptor: 'PetMatch',
+        statement_descriptor: 'Matchcota',
       }),
     });
 

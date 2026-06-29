@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Mail, MessageCircle, MapPin, Clock, CheckCircle, Send } from 'lucide-react';
 
 const contactItems = [
-  { icon: <Mail size={20} className="text-orange-500" />, label: 'Email', value: 'hola@petmatch.cl' },
+  { icon: <Mail size={20} className="text-orange-500" />, label: 'Email', value: 'hola@matchcota.cl' },
   { icon: <MessageCircle size={20} className="text-orange-500" />, label: 'WhatsApp', value: '+56 9 1234 5678' },
   { icon: <MapPin size={20} className="text-orange-500" />, label: 'Ubicación', value: 'Santiago, Chile' },
   { icon: <Clock size={20} className="text-orange-500" />, label: 'Horario', value: 'Lunes a Viernes 9:00 - 18:00' },

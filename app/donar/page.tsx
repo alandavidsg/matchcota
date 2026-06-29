@@ -154,7 +154,7 @@ export default function DonarPage() {
             ))}
           </div>
           <p className="text-xs text-gray-400 mt-4 text-center">
-            Envía el comprobante a <span className="text-orange-500">donaciones@petmatch.cl</span>
+            Envía el comprobante a <span className="text-orange-500">donaciones@matchcota.cl</span>
           </p>
         </div>
 

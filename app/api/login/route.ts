@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const PASSWORD = process.env.SITE_PASSWORD ?? 'petmatch2025';
+const PASSWORD = process.env.SITE_PASSWORD ?? 'matchcota2025';
 
 export async function POST(req: NextRequest) {
   const { password } = await req.json();
@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
   }
 
   const res = NextResponse.json({ ok: true });
-  res.cookies.set('petmatch_auth', 'ok', {
+  res.cookies.set('matchcota_auth', 'ok', {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',

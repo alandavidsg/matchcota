@@ -88,7 +88,7 @@ export default function PanelLayout({ children }: { children: React.ReactNode })
             </button>
             <a href="/" className="flex items-center gap-2">
               <PawPrint size={20} className="text-orange-400" />
-              <span className="font-semibold text-sm">PetMatch</span>
+              <span className="font-semibold text-sm">Matchcota</span>
             </a>
             <span className="text-white/30 text-sm hidden md:block">/ Panel</span>
           </div>

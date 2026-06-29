@@ -213,7 +213,7 @@ const faqData = [
     category: 'Adopción',
     items: [
       { q: '¿Cómo puedo adoptar una mascota?', a: 'Entra al catálogo, elige la mascota que te interese y haz clic en "Quiero adoptar". Completa el formulario y nos pondremos en contacto contigo en 24–48 horas.' },
-      { q: '¿Tiene algún costo adoptar?', a: 'No, la adopción es completamente gratuita. PetMatch es una plataforma sin fines de lucro.' },
+      { q: '¿Tiene algún costo adoptar?', a: 'No, la adopción es completamente gratuita. Matchcota es una plataforma sin fines de lucro.' },
       { q: '¿Cuánto demora el proceso de adopción?', a: 'Una vez enviada tu solicitud, te contactamos en 24 a 48 horas para coordinar el encuentro y confirmar la adopción.' },
       { q: '¿Puedo adoptar si vivo en departamento?', a: 'Sí. Te pedimos que seas honesto en el formulario para encontrar la mascota que mejor se adapte a tu estilo de vida.' },
     ],
@@ -239,15 +239,15 @@ const faqData = [
     items: [
       { q: '¿A dónde va mi donación?', a: 'Se destina a gastos veterinarios, alimentación y transporte de mascotas rescatadas mientras esperan ser adoptadas.' },
       { q: '¿Puedo donar sin MercadoPago?', a: 'Sí, también aceptamos transferencias bancarias. En la página de donaciones encontrarás los datos bancarios.' },
-      { q: '¿Las donaciones tienen boleta o recibo?', a: 'Por el momento no emitimos boletas tributarias. Si necesitas un comprobante escríbenos a donaciones@petmatch.cl.' },
+      { q: '¿Las donaciones tienen boleta o recibo?', a: 'Por el momento no emitimos boletas tributarias. Si necesitas un comprobante escríbenos a donaciones@matchcota.cl.' },
     ],
   },
   {
-    category: 'Sobre PetMatch',
+    category: 'Sobre Matchcota',
     items: [
-      { q: '¿PetMatch tiene app móvil?', a: 'Aún no, pero el sitio está optimizado para móviles. Puedes agregarlo a tu pantalla de inicio para acceso rápido.' },
+      { q: '¿Matchcota tiene app móvil?', a: 'Aún no, pero el sitio está optimizado para móviles. Puedes agregarlo a tu pantalla de inicio para acceso rápido.' },
       { q: '¿En qué regiones de Chile opera?', a: 'En todo Chile. Puedes filtrar por región en el catálogo para ver mascotas cerca de ti.' },
-      { q: '¿Cómo puedo contactarlos?', a: 'A través de la sección Contacto o al correo contacto@petmatch.cl. También estamos en Instagram, Facebook y TikTok.' },
+      { q: '¿Cómo puedo contactarlos?', a: 'A través de la sección Contacto o al correo contacto@matchcota.cl. También estamos en Instagram, Facebook y TikTok.' },
     ],
   },
 ];
@@ -283,7 +283,7 @@ function FaqPreview() {
           </div>
         </div>
         <h2 className="text-3xl font-semibold text-[#1a1a2e] mb-2">Preguntas frecuentes</h2>
-        <p className="text-gray-400 text-sm">Todo lo que necesitas saber sobre PetMatch</p>
+        <p className="text-gray-400 text-sm">Todo lo que necesitas saber sobre Matchcota</p>
       </div>
 
       {/* Tabs horizontales */}
