@@ -31,6 +31,21 @@ export default function ProximamentePage() {
           font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
           padding: 24px;
         }
+        .proximamente-video {
+          position: absolute;
+          inset: 0;
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          opacity: 0.28;
+          z-index: 0;
+        }
+        .proximamente-overlay {
+          position: absolute;
+          inset: 0;
+          z-index: 1;
+          background: linear-gradient(180deg, rgba(26,26,46,0.7) 0%, rgba(21,21,42,0.55) 45%, rgba(16,16,34,0.85) 100%);
+        }
         .proximamente-glow {
           position: absolute;
           width: 520px; height: 520px;
@@ -39,6 +54,7 @@ export default function ProximamentePage() {
           filter: blur(20px);
           top: 50%; left: 50%;
           transform: translate(-50%, -50%);
+          z-index: 1;
           animation: pulse 6s ease-in-out infinite;
         }
         @keyframes pulse {
@@ -49,6 +65,7 @@ export default function ProximamentePage() {
           position: absolute;
           font-size: 26px;
           opacity: 0.07;
+          z-index: 1;
           animation: float 14s linear infinite;
           user-select: none;
         }
@@ -141,6 +158,18 @@ export default function ProximamentePage() {
           color: #5a5a72;
         }
       `}</style>
+
+      {/* Video de fondo en loop */}
+      <video
+        className="proximamente-video"
+        src="/hero.mp4"
+        autoPlay
+        muted
+        loop
+        playsInline
+        aria-hidden="true"
+      />
+      <div className="proximamente-overlay" />
 
       <div className="proximamente-glow" />
 
