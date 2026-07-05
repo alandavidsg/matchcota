@@ -60,11 +60,11 @@ export default function ProximamentePage() {
           position: absolute;
           width: 520px; height: 520px;
           border-radius: 50%;
-          background: radial-gradient(circle, rgba(232,108,0,0.22) 0%, transparent 70%);
-          filter: blur(20px);
+          background: radial-gradient(circle, rgba(232,108,0,0.22) 0%, rgba(232,108,0,0.08) 45%, transparent 72%);
           top: 50%; left: 50%;
           transform: translate(-50%, -50%);
           z-index: 1;
+          will-change: transform, opacity;
           animation: pulse 6s ease-in-out infinite;
         }
         @keyframes pulse {
@@ -76,6 +76,7 @@ export default function ProximamentePage() {
           font-size: 26px;
           opacity: 0.07;
           z-index: 1;
+          will-change: transform, opacity;
           animation: float 14s linear infinite;
           user-select: none;
         }
@@ -107,14 +108,22 @@ export default function ProximamentePage() {
           text-transform: uppercase;
         }
         .proximamente-dot {
+          position: relative;
           width: 7px; height: 7px; border-radius: 50%;
           background: #e86c00;
-          box-shadow: 0 0 0 0 rgba(232,108,0,0.7);
+        }
+        .proximamente-dot::after {
+          content: '';
+          position: absolute;
+          inset: 0;
+          border-radius: 50%;
+          background: rgba(232,108,0,0.7);
+          will-change: transform, opacity;
           animation: blink 1.6s ease-in-out infinite;
         }
         @keyframes blink {
-          0%, 100% { box-shadow: 0 0 0 0 rgba(232,108,0,0.7); }
-          50% { box-shadow: 0 0 0 7px rgba(232,108,0,0); }
+          0%, 100% { transform: scale(1); opacity: 0.7; }
+          50% { transform: scale(3); opacity: 0; }
         }
         .proximamente-logo {
           font-size: clamp(44px, 11vw, 76px);
@@ -134,6 +143,7 @@ export default function ProximamentePage() {
           position: absolute;
           opacity: 0;
           filter: drop-shadow(0 3px 8px rgba(232,108,0,0.3));
+          will-change: transform, opacity;
           animation: walk 3.6s ease-in-out infinite;
         }
         @keyframes walk {
@@ -142,10 +152,6 @@ export default function ProximamentePage() {
           68%  { opacity: 1; }
           86%  { opacity: 0; }
           100% { opacity: 0; }
-        }
-        @keyframes wiggle {
-          0%, 100% { transform: rotate(-8deg); }
-          50% { transform: rotate(8deg); }
         }
         .proximamente-tagline {
           font-size: clamp(16px, 4vw, 19px);
