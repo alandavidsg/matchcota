@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { X, Phone, Navigation, MapPin } from 'lucide-react';
+import { X, Phone, Navigation, MapPin, ExternalLink } from 'lucide-react';
 
 type Refugio = {
   nombre: string;
@@ -94,6 +94,9 @@ export default function RefugioMapModal({ petName, lat, lng, onClose }: Props) {
     ? `https://www.google.com/maps/dir/?api=1&origin=${lat},${lng}&destination=${refugio.lat},${refugio.lng}`
     : '';
 
+  // Búsqueda de refugios reales en Google Maps cerca de la última ubicación del animal
+  const searchMapsUrl = `https://www.google.com/maps/search/refugio+de+animales/@${lat},${lng},13z`;
+
   return (
     <div className="fixed inset-0 z-[80] bg-black/60 flex items-end md:items-center justify-center p-0 md:p-4">
       <div className="bg-white rounded-t-3xl md:rounded-3xl w-full max-w-lg overflow-hidden">
@@ -115,9 +118,17 @@ export default function RefugioMapModal({ petName, lat, lng, onClose }: Props) {
         {loading ? (
           <div className="h-72 flex items-center justify-center text-gray-400 text-sm">Buscando refugio cercano...</div>
         ) : !refugio ? (
-          <div className="h-72 flex flex-col items-center justify-center text-gray-400 text-sm gap-2 px-8 text-center">
+          <div className="h-72 flex flex-col items-center justify-center text-gray-400 text-sm gap-4 px-8 text-center">
             <span className="text-3xl">🏠</span>
-            Aún no hay refugios con ubicación registrada cerca.
+            Aún no hay refugios registrados en Matchcota cerca.
+            <a
+              href={searchMapsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-1.5 bg-orange-500 hover:bg-orange-600 text-white rounded-xl px-5 py-3 text-sm font-semibold transition"
+            >
+              <ExternalLink size={15} /> Buscar refugios en Google Maps
+            </a>
           </div>
         ) : (
           <>
@@ -149,6 +160,14 @@ export default function RefugioMapModal({ petName, lat, lng, onClose }: Props) {
                   </a>
                 )}
               </div>
+              <a
+                href={searchMapsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-2.5 flex items-center justify-center gap-1.5 text-gray-400 hover:text-orange-500 text-xs font-medium transition py-1"
+              >
+                <ExternalLink size={13} /> Ver más refugios en Google Maps
+              </a>
             </div>
           </>
         )}
