@@ -2,8 +2,12 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import { supabase } from '../../../lib/supabase';
-import { MapPin, ArrowLeft, AlertTriangle, CheckCircle, Eye, PawPrint } from 'lucide-react';
+import { MapPin, ArrowLeft, AlertTriangle, CheckCircle, Eye, PawPrint, HouseHeart } from 'lucide-react';
+
+// Leaflet no soporta SSR — cargar el modal del mapa solo en el cliente
+const RefugioMapModal = dynamic(() => import('./RefugioMapModal'), { ssr: false });
 
 function WhatsAppIcon() {
   return (
@@ -45,6 +49,7 @@ export default function PetDetailClient({ id }: { id: string }) {
   const [pet, setPet] = useState<Pet | null>(null);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [showRefugioMap, setShowRefugioMap] = useState(false);
   const [avistamientos, setAvistamientos] = useState<Avistamiento[]>([]);
   const [currentImg, setCurrentImg] = useState(0);
   const [lightbox, setLightbox] = useState(false);
@@ -124,6 +129,13 @@ export default function PetDetailClient({ id }: { id: string }) {
   );
 
   const allImages = (pet.images && pet.images.length > 0) ? pet.images : [pet.image];
+
+  // Última ubicación conocida: el avistamiento más reciente con coordenadas, o donde se publicó
+  const lastSighting = avistamientos.find((a) => a.lat != null && a.lng != null);
+  const lastSeen =
+    lastSighting ? { lat: lastSighting.lat as number, lng: lastSighting.lng as number }
+    : pet.lat != null && pet.lng != null ? { lat: pet.lat, lng: pet.lng }
+    : null;
 
   return (
     <main className="min-h-screen bg-gray-50 pb-20">
@@ -386,6 +398,16 @@ export default function PetDetailClient({ id }: { id: string }) {
                     <WhatsAppIcon />
                     Compartir por WhatsApp
                   </button>
+                  {lastSeen && (
+                    <button
+                      type="button"
+                      onClick={() => setShowRefugioMap(true)}
+                      className="w-full flex items-center justify-center gap-2 bg-[#1a1a2e] hover:bg-[#2a2a4a] text-white rounded-2xl py-4 text-base font-semibold transition touch-manipulation"
+                    >
+                      <HouseHeart size={20} className="text-orange-400" />
+                      Refugio más cercano
+                    </button>
+                  )}
                 </div>
               ) : (
                 <div className="bg-white rounded-3xl border border-gray-100 p-8">
@@ -435,6 +457,15 @@ export default function PetDetailClient({ id }: { id: string }) {
           </div>
         )}
       </div>
+
+      {showRefugioMap && lastSeen && (
+        <RefugioMapModal
+          petName={pet.name}
+          lat={lastSeen.lat}
+          lng={lastSeen.lng}
+          onClose={() => setShowRefugioMap(false)}
+        />
+      )}
     </main>
   );
 }
