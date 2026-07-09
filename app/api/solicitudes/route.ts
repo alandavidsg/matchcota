@@ -57,10 +57,11 @@ export async function POST(req: NextRequest) {
       const petType = mascota?.breed ? `${mascota.type} ${mascota.breed}` : mascota?.type ?? '';
       const petLocation = mascota?.location ?? '';
       const petImage = mascota?.image ?? '';
-      const siteUrl = 'https://petmatch-gamma.vercel.app';
+      // URL de pruebas mientras matchcota.cl está en modo "Próximamente"; al lanzar, cambiar a https://matchcota.cl
+      const siteUrl = 'https://matchcotacl-alan-s-team.vercel.app';
 
       await resend.emails.send({
-        from: 'Matchcota <notificaciones@petmatch-gamma.vercel.app>',
+        from: 'Matchcota <notificaciones@matchcota.cl>',
         to: destinatario,
         subject: `🐾 Nueva solicitud de adopción para ${petName}`,
         html: `
@@ -154,7 +155,7 @@ export async function POST(req: NextRequest) {
           <td style="background:#f9f9f9;padding:16px 32px;text-align:center;border-top:1px solid #eeeeee;">
             <p style="margin:0;font-size:12px;color:#aaaaaa;">
               Este email fue enviado automáticamente por Matchcota.<br>
-              <a href="${siteUrl}" style="color:#e86c00;text-decoration:none;">matchcota.vercel.app</a>
+              <a href="${siteUrl}" style="color:#e86c00;text-decoration:none;">matchcota.cl</a>
             </p>
           </td>
         </tr>

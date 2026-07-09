@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 // Dominios que deben mostrar la página "Próximamente" mientras el sitio no está listo.
-// El resto (petmatch-gamma.vercel.app) sigue mostrando la app completa para pruebas.
+// El resto (matchcotacl-alan-s-team.vercel.app) sigue mostrando la app completa para pruebas.
 const COMING_SOON_HOSTS = ['matchcota.cl', 'www.matchcota.cl'];
 
 export function proxy(req: NextRequest) {

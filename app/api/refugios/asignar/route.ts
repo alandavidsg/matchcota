@@ -3,7 +3,8 @@ import { supabaseAdmin } from '../../../../lib/supabase-admin';
 import { Resend } from 'resend';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
-const SITE_URL = 'https://petmatch-gamma.vercel.app';
+// URL de pruebas mientras matchcota.cl está en modo "Próximamente"; al lanzar, cambiar a https://matchcota.cl
+const SITE_URL = 'https://matchcotacl-alan-s-team.vercel.app';
 
 // Distancia en km entre dos puntos (haversine)
 function distanciaKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
@@ -80,7 +81,7 @@ export async function POST(req: NextRequest) {
         const distancia = minDist < 1 ? `${Math.round(minDist * 1000)} m` : `${minDist.toFixed(1)} km`;
 
         await resend.emails.send({
-          from: 'Matchcota <notificaciones@petmatch-gamma.vercel.app>',
+          from: 'Matchcota <notificaciones@matchcota.cl>',
           to: nearest.email,
           subject: `🐾 Nueva mascota cerca de tu refugio: ${petName}`,
           html: `

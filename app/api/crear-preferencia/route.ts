@@ -11,7 +11,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Monto inválido' }, { status: 400 });
   }
 
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://petmatch-gamma.vercel.app';
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://matchcotacl-alan-s-team.vercel.app';
 
   try {
     const response = await fetch('https://api.mercadopago.com/checkout/preferences', {
