@@ -306,7 +306,7 @@ export default function ReportarPage() {
     if (error) { alert('Error guardando mascota. Intenta de nuevo.'); setSubmitting(false); return; }
     if (nueva?.id) asignarRefugioCercano(nueva.id);
     setSubmitted(true);
-    setTimeout(() => router.push(nueva?.id ? `/mascota/${nueva.id}` : '/'), 2500);
+    setTimeout(() => router.push(nueva?.id ? `/mascota/${nueva.id}` : '/'), 1500);
   };
 
   // Publica la mascota como nueva (sin duplicado)
@@ -360,7 +360,7 @@ export default function ReportarPage() {
     if (nueva?.id) asignarRefugioCercano(nueva.id);
     setShowDupModal(false);
     setSubmitted(true);
-    setTimeout(() => router.push(nueva?.id ? `/mascota/${nueva.id}` : '/'), 2500);
+    setTimeout(() => router.push(nueva?.id ? `/mascota/${nueva.id}` : '/'), 1500);
   };
 
   // Registra avistamiento en mascota existente
@@ -388,7 +388,7 @@ export default function ReportarPage() {
     });
     setShowDupModal(false);
     setSubmitted(true);
-    setTimeout(() => router.push(`/mascota/${mascotaId}`), 2500);
+    setTimeout(() => router.push(`/mascota/${mascotaId}`), 1500);
   };
 
   const handleSubmit = async () => {
