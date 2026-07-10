@@ -405,7 +405,7 @@ export default function PetDetailClient({ id }: { id: string }) {
                       className="w-full flex items-center justify-center gap-2 bg-[#1a1a2e] hover:bg-[#2a2a4a] text-white rounded-2xl py-4 text-base font-semibold transition touch-manipulation"
                     >
                       <HouseHeart size={20} className="text-orange-400" />
-                      Refugio más cercano
+                      Refugios cercanos
                     </button>
                   )}
                 </div>
