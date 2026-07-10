@@ -32,18 +32,28 @@ export default function RefugioMapModal({ petName, lat, lng, onClose }: Props) {
           </button>
         </div>
 
-        <iframe
-          src={embedUrl}
-          title={`Refugios cercanos a ${petName}`}
-          className="w-full h-96 border-0"
-          loading="lazy"
-          referrerPolicy="no-referrer-when-downgrade"
-          allowFullScreen
-        />
+        <div className="relative">
+          <iframe
+            src={embedUrl}
+            title={`Refugios cercanos a ${petName}`}
+            className="w-full h-96 border-0 block"
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+            allowFullScreen
+          />
+          {/* Pin de la última ubicación del animal — el mapa está centrado en ese punto */}
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-full pointer-events-none z-10 flex flex-col items-center">
+            <div className="bg-[#1a1a2e] text-white text-[11px] font-semibold px-2.5 py-1.5 rounded-lg shadow-lg whitespace-nowrap flex items-center gap-1">
+              🐾 {petName} — visto por última vez aquí
+            </div>
+            <div className="w-0 h-0 border-l-[7px] border-r-[7px] border-t-[9px] border-l-transparent border-r-transparent border-t-[#1a1a2e]" />
+            <div className="w-3 h-3 rounded-full bg-orange-500 border-2 border-white shadow-md -mt-0.5" />
+          </div>
+        </div>
 
         <div className="p-5">
           <p className="text-xs text-gray-400 mb-3">
-            Refugios de animales cerca de la última ubicación donde se vio a {petName}.
+            El pin marca dónde se vio a {petName} por última vez; los resultados del mapa son los refugios cercanos. Si mueves el mapa, el pin deja de coincidir — ciérralo y ábrelo para recentrar.
           </p>
           <a
             href={openMapsUrl}
