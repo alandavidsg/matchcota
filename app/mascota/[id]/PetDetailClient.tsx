@@ -386,9 +386,10 @@ export default function PetDetailClient({ id }: { id: string }) {
                   <button
                     type="button"
                     onClick={() => setShowForm(true)}
-                    className="w-full bg-orange-500 hover:bg-orange-600 text-white rounded-2xl py-5 text-lg font-semibold transition touch-manipulation"
+                    className="w-full flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white rounded-2xl py-4 md:py-5 px-4 text-base md:text-lg font-semibold transition touch-manipulation"
                   >
-                    Quiero adoptar a {pet.name} <PawPrint size={18} className="inline ml-1" />
+                    <span className="truncate">Quiero adoptar a {pet.name}</span>
+                    <PawPrint size={18} className="shrink-0" />
                   </button>
                   <button
                     type="button"
