@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { supabase } from '../../../lib/supabase';
-import { MapPin, ArrowLeft, AlertTriangle, CheckCircle, Eye, PawPrint, HouseHeart } from 'lucide-react';
+import { MapPin, ArrowLeft, AlertTriangle, CheckCircle, Eye, PawPrint, HouseHeart, HeartPulse } from 'lucide-react';
 
 // Leaflet no soporta SSR — cargar el modal del mapa solo en el cliente
 const RefugioMapModal = dynamic(() => import('./RefugioMapModal'), { ssr: false });
@@ -49,7 +49,7 @@ export default function PetDetailClient({ id }: { id: string }) {
   const [pet, setPet] = useState<Pet | null>(null);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [showRefugioMap, setShowRefugioMap] = useState(false);
+  const [mapModal, setMapModal] = useState<'refugio' | 'veterinaria' | null>(null);
   const [avistamientos, setAvistamientos] = useState<Avistamiento[]>([]);
   const [currentImg, setCurrentImg] = useState(0);
   const [lightbox, setLightbox] = useState(false);
@@ -399,14 +399,24 @@ export default function PetDetailClient({ id }: { id: string }) {
                     Compartir por WhatsApp
                   </button>
                   {lastSeen && (
-                    <button
-                      type="button"
-                      onClick={() => setShowRefugioMap(true)}
-                      className="w-full flex items-center justify-center gap-2 bg-[#1a1a2e] hover:bg-[#2a2a4a] text-white rounded-2xl py-4 text-base font-semibold transition touch-manipulation"
-                    >
-                      <HouseHeart size={20} className="text-orange-400" />
-                      Refugio más cercano
-                    </button>
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => setMapModal('refugio')}
+                        className="w-full flex items-center justify-center gap-2 bg-[#1a1a2e] hover:bg-[#2a2a4a] text-white rounded-2xl py-4 text-base font-semibold transition touch-manipulation"
+                      >
+                        <HouseHeart size={20} className="text-orange-400" />
+                        Refugio más cercano
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setMapModal('veterinaria')}
+                        className="w-full flex items-center justify-center gap-2 bg-[#1a1a2e] hover:bg-[#2a2a4a] text-white rounded-2xl py-4 text-base font-semibold transition touch-manipulation"
+                      >
+                        <HeartPulse size={20} className="text-sky-400" />
+                        Veterinaria más cercana
+                      </button>
+                    </>
                   )}
                 </div>
               ) : (
@@ -458,13 +468,14 @@ export default function PetDetailClient({ id }: { id: string }) {
         )}
       </div>
 
-      {showRefugioMap && lastSeen && (
+      {mapModal && lastSeen && (
         <RefugioMapModal
           petName={pet.name}
           petLocation={lastSighting?.location ?? pet.location}
           lat={lastSeen.lat}
           lng={lastSeen.lng}
-          onClose={() => setShowRefugioMap(false)}
+          tipo={mapModal}
+          onClose={() => setMapModal(null)}
         />
       )}
     </main>
