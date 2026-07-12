@@ -18,7 +18,9 @@ export default function RefugioMapModal({ petName, petLocation, lat, lng, onClos
     ? `refugio de animales cerca de ${petLocation}`
     : `refugio de animales cerca de ${lat},${lng}`;
   const embedUrl = `https://maps.google.com/maps?saddr=${lat},${lng}&daddr=${encodeURIComponent(destino)}&hl=es&output=embed`;
-  const openMapsUrl = `https://www.google.com/maps/search/refugio+de+animales/@${lat},${lng},13z`;
+  // Misma ruta pero en la app/web de Google Maps completa: ahí Google permite
+  // ver y elegir entre los demás refugios que calzan con la búsqueda.
+  const openMapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${lat},${lng}&destination=${encodeURIComponent(destino)}`;
 
   return (
     <div
@@ -61,7 +63,7 @@ export default function RefugioMapModal({ petName, petLocation, lat, lng, onClos
             rel="noopener noreferrer"
             className="w-full flex items-center justify-center gap-1.5 bg-orange-500 hover:bg-orange-600 text-white rounded-xl py-3 text-sm font-semibold transition"
           >
-            <ExternalLink size={15} /> Ver todos los refugios en Google Maps
+            <ExternalLink size={15} /> Abrir ruta y más refugios en Google Maps
           </a>
         </div>
       </div>
