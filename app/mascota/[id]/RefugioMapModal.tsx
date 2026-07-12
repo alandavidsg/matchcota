@@ -18,9 +18,10 @@ export default function RefugioMapModal({ petName, petLocation, lat, lng, onClos
     ? `refugio de animales cerca de ${petLocation}`
     : `refugio de animales cerca de ${lat},${lng}`;
   const embedUrl = `https://maps.google.com/maps?saddr=${lat},${lng}&daddr=${encodeURIComponent(destino)}&hl=es&output=embed`;
-  // Misma ruta pero en la app/web de Google Maps completa: ahí Google permite
-  // ver y elegir entre los demás refugios que calzan con la búsqueda.
-  const openMapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${lat},${lng}&destination=${encodeURIComponent(destino)}`;
+  // Ruta en la app de Google Maps (misma vista del modal)
+  const rutaUrl = `https://www.google.com/maps/dir/?api=1&origin=${lat},${lng}&destination=${encodeURIComponent(destino)}`;
+  // Búsqueda con TODOS los refugios cercanos a la última ubicación del animal
+  const todosUrl = `https://www.google.com/maps/search/refugio+de+animales/@${lat},${lng},13z`;
 
   return (
     <div
@@ -57,14 +58,24 @@ export default function RefugioMapModal({ petName, petLocation, lat, lng, onClos
             El punto A marca dónde se vio a {petName} por última vez y el punto B el refugio más
             cercano, con la ruta entre ambos.
           </p>
-          <a
-            href={openMapsUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="w-full flex items-center justify-center gap-1.5 bg-orange-500 hover:bg-orange-600 text-white rounded-xl py-3 text-sm font-semibold transition"
-          >
-            <ExternalLink size={15} /> Abrir ruta y más refugios en Google Maps
-          </a>
+          <div className="flex gap-2">
+            <a
+              href={rutaUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 flex items-center justify-center gap-1.5 bg-orange-500 hover:bg-orange-600 text-white rounded-xl py-3 text-sm font-semibold transition"
+            >
+              <ExternalLink size={15} /> Cómo llegar
+            </a>
+            <a
+              href={todosUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 flex items-center justify-center gap-1.5 border border-gray-200 hover:border-orange-400 text-[#1a1a2e] rounded-xl py-3 text-sm font-semibold transition"
+            >
+              <ExternalLink size={15} /> Ver más refugios
+            </a>
+          </div>
         </div>
       </div>
     </div>
