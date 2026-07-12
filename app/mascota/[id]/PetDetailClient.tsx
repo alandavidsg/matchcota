@@ -399,24 +399,24 @@ export default function PetDetailClient({ id }: { id: string }) {
                     Compartir por WhatsApp
                   </button>
                   {lastSeen && (
-                    <>
+                    <div className="flex gap-3">
                       <button
                         type="button"
                         onClick={() => setMapModal('refugio')}
-                        className="w-full flex items-center justify-center gap-2 bg-[#1a1a2e] hover:bg-[#2a2a4a] text-white rounded-2xl py-4 text-base font-semibold transition touch-manipulation"
+                        className="flex-1 flex items-center justify-center gap-2 bg-[#1a1a2e] hover:bg-[#2a2a4a] text-white rounded-2xl py-4 text-sm font-semibold transition touch-manipulation"
                       >
-                        <HouseHeart size={20} className="text-orange-400" />
+                        <HouseHeart size={18} className="text-orange-400 shrink-0" />
                         Refugio más cercano
                       </button>
                       <button
                         type="button"
                         onClick={() => setMapModal('veterinaria')}
-                        className="w-full flex items-center justify-center gap-2 bg-[#1a1a2e] hover:bg-[#2a2a4a] text-white rounded-2xl py-4 text-base font-semibold transition touch-manipulation"
+                        className="flex-1 flex items-center justify-center gap-2 bg-[#1a1a2e] hover:bg-[#2a2a4a] text-white rounded-2xl py-4 text-sm font-semibold transition touch-manipulation"
                       >
-                        <HeartPulse size={20} className="text-sky-400" />
+                        <HeartPulse size={18} className="text-sky-400 shrink-0" />
                         Veterinaria más cercana
                       </button>
-                    </>
+                    </div>
                   )}
                 </div>
               ) : (
