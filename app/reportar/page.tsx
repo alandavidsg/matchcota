@@ -50,6 +50,10 @@ export default function ReportarPage() {
       const city = data.city || '';
       const region = data.region || '';
       setLocation(city ? (region ? `${city}, ${region}` : city) : '');
+      // Coordenadas aproximadas (nivel ciudad) — permiten mapa, refugio cercano y notificación
+      if (typeof data.latitude === 'number' && typeof data.longitude === 'number') {
+        setCoords({ lat: data.latitude, lng: data.longitude });
+      }
     } catch {
       setLocation('');
     }
