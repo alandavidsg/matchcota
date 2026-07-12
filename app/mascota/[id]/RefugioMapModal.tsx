@@ -20,8 +20,8 @@ export default function RefugioMapModal({ petName, petLocation, lat, lng, onClos
   const embedUrl = `https://maps.google.com/maps?saddr=${lat},${lng}&daddr=${encodeURIComponent(destino)}&hl=es&output=embed`;
   // Ruta en la app de Google Maps (misma vista del modal)
   const rutaUrl = `https://www.google.com/maps/dir/?api=1&origin=${lat},${lng}&destination=${encodeURIComponent(destino)}`;
-  // Pin en Google Maps con el punto exacto donde se vio al animal
-  const pinUrl = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+  // Búsqueda con todos los refugios cercanos a la última ubicación del animal
+  const todosUrl = `https://www.google.com/maps/search/refugio+de+animales/@${lat},${lng},13z`;
 
   return (
     <div
@@ -68,12 +68,12 @@ export default function RefugioMapModal({ petName, petLocation, lat, lng, onClos
               <ExternalLink size={15} /> Cómo llegar
             </a>
             <a
-              href={pinUrl}
+              href={todosUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="flex-1 flex items-center justify-center gap-1.5 border border-gray-200 hover:border-orange-400 text-[#1a1a2e] rounded-xl py-3 text-sm font-semibold transition"
             >
-              <ExternalLink size={15} /> Ver dónde se vio
+              <ExternalLink size={15} /> Ver más refugios
             </a>
           </div>
         </div>
