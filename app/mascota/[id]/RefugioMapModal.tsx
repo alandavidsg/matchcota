@@ -4,15 +4,20 @@ import { X, MapPin, ExternalLink } from 'lucide-react';
 
 type Props = {
   petName: string;
+  petLocation?: string | null;
   lat: number;
   lng: number;
   onClose: () => void;
 };
 
-export default function RefugioMapModal({ petName, lat, lng, onClose }: Props) {
+export default function RefugioMapModal({ petName, petLocation, lat, lng, onClose }: Props) {
   // Modo direcciones del embed gratuito de Google: pin A anclado donde se vio al
-  // animal, pin B en el refugio de animales más cercano que resuelva Google, con la ruta.
-  const embedUrl = `https://maps.google.com/maps?saddr=${lat},${lng}&daddr=refugio%20de%20animales&hl=es&output=embed`;
+  // animal, pin B en el refugio más cercano, con la ruta. El destino necesita
+  // contexto de lugar para que Google lo resuelva (sin él muestra el mapamundi).
+  const destino = petLocation
+    ? `refugio de animales cerca de ${petLocation}`
+    : `refugio de animales cerca de ${lat},${lng}`;
+  const embedUrl = `https://maps.google.com/maps?saddr=${lat},${lng}&daddr=${encodeURIComponent(destino)}&hl=es&output=embed`;
   const openMapsUrl = `https://www.google.com/maps/search/refugio+de+animales/@${lat},${lng},13z`;
 
   return (

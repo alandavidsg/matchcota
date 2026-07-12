@@ -461,6 +461,7 @@ export default function PetDetailClient({ id }: { id: string }) {
       {showRefugioMap && lastSeen && (
         <RefugioMapModal
           petName={pet.name}
+          petLocation={lastSighting?.location ?? pet.location}
           lat={lastSeen.lat}
           lng={lastSeen.lng}
           onClose={() => setShowRefugioMap(false)}
