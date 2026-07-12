@@ -20,6 +20,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <a href="/quienes-somos" className="hover:text-white transition">Quiénes somos</a>
               <a href="/faq" className="hover:text-white transition">FAQ</a>
               <a href="/contacto" className="hover:text-white transition">Contacto</a>
+              <a href="/refugios/login" className="text-orange-400/70 hover:text-orange-400 transition">Panel de refugios</a>
             </div>
           </div>
 
@@ -49,7 +50,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           {children}
 
           <footer className="bg-[#1a1a2e] mt-8">
-            <div className="max-w-5xl mx-auto px-8 py-12 grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="max-w-5xl mx-auto px-8 py-12 grid grid-cols-1 md:grid-cols-4 gap-8">
               <div>
                 <div className="text-white text-lg font-semibold mb-3 flex items-center gap-1.5"><PawPrint size={18} className="text-orange-500" /><span>Match<span className="text-orange-500">Cota</span></span></div>
                 <p className="text-white/40 text-sm leading-relaxed">Conectando mascotas de la calle con hogares llenos de amor en Chile.</p>
@@ -64,6 +65,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   <a href="/quienes-somos" className="text-white/40 hover:text-white text-sm transition">Quiénes somos</a>
                   <a href="/faq" className="text-white/40 hover:text-white text-sm transition">Preguntas frecuentes</a>
                   <a href="/contacto" className="text-white/40 hover:text-white text-sm transition">Contacto</a>
+                </div>
+              </div>
+              <div>
+                <div className="text-white text-sm font-medium mb-3">Refugios</div>
+                <div className="flex flex-col gap-2">
+                  <a href="/refugios/login" className="text-white/40 hover:text-white text-sm transition">Panel de refugios</a>
+                  <a href="/refugios/registro" className="text-white/40 hover:text-white text-sm transition">Registrar mi refugio</a>
                 </div>
               </div>
               <div>
