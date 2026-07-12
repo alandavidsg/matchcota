@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { supabase } from '../../../lib/supabase';
-import { MapPin, ArrowLeft, AlertTriangle, CheckCircle, Eye, PawPrint, HouseHeart, HeartPulse } from 'lucide-react';
+import { MapPin, ArrowLeft, AlertTriangle, CheckCircle, Eye, PawPrint, HouseHeart, HeartPulse, Link2, Check } from 'lucide-react';
 
 // Leaflet no soporta SSR — cargar el modal del mapa solo en el cliente
 const RefugioMapModal = dynamic(() => import('./RefugioMapModal'), { ssr: false });
@@ -50,6 +50,7 @@ export default function PetDetailClient({ id }: { id: string }) {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [mapModal, setMapModal] = useState<'refugio' | 'veterinaria' | null>(null);
+  const [linkCopied, setLinkCopied] = useState(false);
   const [avistamientos, setAvistamientos] = useState<Avistamiento[]>([]);
   const [currentImg, setCurrentImg] = useState(0);
   const [lightbox, setLightbox] = useState(false);
@@ -84,6 +85,20 @@ export default function PetDetailClient({ id }: { id: string }) {
     }
     fetchPet();
   }, [id]);
+
+  // Compartir enlace: menú nativo en móvil, copiar al portapapeles en desktop
+  const shareLink = async () => {
+    const url = window.location.href;
+    if (navigator.share) {
+      try { await navigator.share({ title: pet?.name ?? 'Matchcota', url }); } catch { /* usuario canceló */ }
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
+    } catch { /* portapapeles no disponible */ }
+  };
 
   const shareOnWhatsApp = () => {
     const url = window.location.href;
@@ -419,6 +434,13 @@ export default function PetDetailClient({ id }: { id: string }) {
                       </button>
                     </div>
                   )}
+                  <button
+                    type="button"
+                    onClick={shareLink}
+                    className="self-center flex items-center gap-1.5 text-gray-400 hover:text-orange-500 text-xs font-medium transition py-1 touch-manipulation"
+                  >
+                    {linkCopied ? <><Check size={13} className="text-green-500" /> Enlace copiado</> : <><Link2 size={13} /> Compartir enlace</>}
+                  </button>
                 </div>
               ) : (
                 <div className="bg-white rounded-3xl border border-gray-100 p-8">
