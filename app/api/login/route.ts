@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const PASSWORD = process.env.SITE_PASSWORD ?? 'matchcota2025';
+// La contraseña vive solo en la variable de entorno SITE_PASSWORD (el repo es público)
+const PASSWORD = process.env.SITE_PASSWORD;
 
 export async function POST(req: NextRequest) {
   const { password } = await req.json();
 
-  if (password !== PASSWORD) {
+  if (!PASSWORD || password !== PASSWORD) {
     return NextResponse.json({ ok: false }, { status: 401 });
   }
 
