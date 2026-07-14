@@ -403,7 +403,7 @@ export default function PetDetailClient({ id }: { id: string }) {
                     onClick={() => setShowForm(true)}
                     className="w-full flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white rounded-2xl py-4 md:py-5 px-4 text-base md:text-lg font-semibold transition touch-manipulation"
                   >
-                    <span className="truncate">Quiero adoptar a {pet.name}</span>
+                    <span className="text-center leading-snug">Quiero adoptar a {pet.name}</span>
                     <PawPrint size={18} className="shrink-0" />
                   </button>
                   <button
