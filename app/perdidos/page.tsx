@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
-import { PawPrint, Search, Megaphone, Camera, MapPin, Phone, Loader2, Lightbulb, Coins } from 'lucide-react';
+import { PawPrint, Search, Megaphone, Camera, MapPin, Loader2, Lightbulb, Coins } from 'lucide-react';
 import exifr from 'exifr';
 
 type Match = {
@@ -62,7 +62,9 @@ export default function PerdidosPage() {
   const [lostPets, setLostPets] = useState<LostPet[]>([]);
 
   useEffect(() => {
-    supabase.from('mascotas_perdidas').select('*').eq('encontrada', false)
+    supabase.from('mascotas_perdidas')
+      .select('id, nombre, tipo, raza, imagen, ultima_ubicacion, recompensa, contacto_nombre, contacto_telefono, encontrada')
+      .eq('encontrada', false)
       .order('created_at', { ascending: false })
       .then(({ data }) => { if (data) setLostPets(data); });
   }, [submitted]);
@@ -205,10 +207,10 @@ export default function PerdidosPage() {
     try {
       const ext = reportFile.name.split('.').pop() ?? 'jpg';
       const filename = `perdidos/${Date.now()}.${ext}`;
-      const { error: uploadError } = await supabase.storage.from('mascotas').upload(filename, reportFile, { contentType: reportFile.type });
+      const { error: uploadError } = await supabase.storage.from('mascotas-images').upload(filename, reportFile, { contentType: reportFile.type });
       let imageUrl = reportPreview;
       if (!uploadError) {
-        const { data: urlData } = supabase.storage.from('mascotas').getPublicUrl(filename);
+        const { data: urlData } = supabase.storage.from('mascotas-images').getPublicUrl(filename);
         imageUrl = urlData.publicUrl;
       }
       const { error } = await supabase.from('mascotas_perdidas').insert({
@@ -491,7 +493,8 @@ export default function PerdidosPage() {
         {lostPets.length > 0 ? (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {lostPets.map((pet) => (
-              <div key={pet.id} className="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm">
+              <a key={pet.id} href={`/perdidos/${pet.id}`}
+                className="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-md hover:border-orange-200 transition block">
                 <div className="relative">
                   <img src={pet.imagen} alt={pet.nombre} className="h-40 w-full object-cover" />
                   {pet.recompensa > 0 && (
@@ -504,12 +507,11 @@ export default function PerdidosPage() {
                   <div className="font-semibold text-[#1a1a2e]">{pet.nombre || 'Sin nombre'}</div>
                   <div className="text-xs text-gray-400 mt-1">{pet.raza} · {pet.tipo}</div>
                   <div className="text-xs text-gray-400 mt-1 flex items-center gap-1"><MapPin size={11} />{pet.ultima_ubicacion}</div>
-                  <a href={`tel:${pet.contacto_telefono}`}
-                    className="mt-3 flex items-center justify-center gap-1 w-full text-center bg-orange-50 hover:bg-orange-100 text-orange-600 text-xs font-semibold py-2 rounded-lg transition">
-                    <Phone size={12} /> Llamar a {pet.contacto_nombre}
-                  </a>
+                  <div className="mt-3 flex items-center justify-center gap-1 w-full text-center bg-orange-50 text-orange-600 text-xs font-semibold py-2 rounded-lg">
+                    Ver publicación
+                  </div>
                 </div>
-              </div>
+              </a>
             ))}
           </div>
         ) : (
