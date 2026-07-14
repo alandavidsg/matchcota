@@ -334,7 +334,7 @@ export default function ReportarPage() {
 
     // Usar .select() para obtener el ID de la mascota recién creada
     const { data: nueva, error: insertError } = await supabase.from('mascotas').insert({
-      name: `${form.tipo}${form.raza ? ` ${form.raza}` : ''} reportado`,
+      name: `${form.tipo}${form.raza ? ` ${form.raza}` : ''}`,
       type: form.tipo,
       breed: form.raza,
       age: form.edad,
