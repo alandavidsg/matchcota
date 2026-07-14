@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '../../lib/supabase';
-import { ArrowLeft, Camera, Home, MapPin, Phone, CheckCircle, Sparkles, PenLine, AlertTriangle, Eye, Crop as CropIcon } from 'lucide-react';
+import { ArrowLeft, Camera, Home, MapPin, Phone, CheckCircle, Sparkles, PenLine, AlertTriangle, Eye, Crop as CropIcon, Zap } from 'lucide-react';
 import exifr from 'exifr';
 import ReactCrop, { type Crop, type PixelCrop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
@@ -26,6 +26,10 @@ export default function ReportarPage() {
   const [completedCrop, setCompletedCrop] = useState<PixelCrop>();
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
+  // Adopción urgente: se ofrece cuando la edad es Cachorro o Senior
+  const [urgente, setUrgente] = useState(false);
+  const esUrgenteElegible = (edad: string) => edad === 'Cachorro' || edad === 'Senior';
 
   // Detección de duplicados
   type DupMatch = { id: number; name: string; image: string; location: string; similitud: number; razon: string };
@@ -303,6 +307,7 @@ export default function ReportarPage() {
       images: imageUrls,
       description: `${adoptForm.descripcion}. Color: ${adoptForm.color}${adoptForm.sexo ? `. Sexo: ${adoptForm.sexo}` : ''}. Contacto: ${adoptForm.contactoNombre}, ${adoptForm.telefono}, ${adoptForm.email}`,
       available: true,
+      urgente: esUrgenteElegible(adoptForm.edad) && urgente,
       lat: coords?.lat ?? null,
       lng: coords?.lng ?? null,
     }).select('id').single();
@@ -340,6 +345,7 @@ export default function ReportarPage() {
       lng: coords?.lng ?? null,
       description: `${form.descripcion}. Color: ${form.color}`,
       available: true,
+      urgente: esUrgenteElegible(form.edad) && urgente,
       avistamientos_count: 1,
     }).select('id').single();
 
@@ -669,6 +675,17 @@ export default function ReportarPage() {
               </div>
             </div>
 
+            {hasPhotos && esUrgenteElegible(adoptForm.edad) && (
+              <label className="flex items-start gap-3 bg-red-50 border border-red-100 rounded-2xl p-4 mb-3 cursor-pointer touch-manipulation">
+                <input type="checkbox" checked={urgente} onChange={(e) => setUrgente(e.target.checked)} className="mt-0.5 w-4 h-4 accent-red-500 shrink-0" />
+                <span>
+                  <span className="flex items-center gap-1.5 text-sm font-semibold text-red-600"><Zap size={14} /> Marcar como adopción urgente</span>
+                  <span className="block text-xs text-red-400 mt-1">
+                    Los {adoptForm.edad === 'Cachorro' ? 'cachorros' : 'adultos mayores'} necesitan hogar pronto — se destacará en la categoría de adopción urgente.
+                  </span>
+                </span>
+              </label>
+            )}
             {hasPhotos && (
               <button onClick={handleAdoptSubmit} disabled={submitting} className="w-full bg-orange-500 text-white py-4 rounded-xl font-medium hover:bg-orange-600 transition disabled:opacity-60 touch-manipulation" style={{ fontSize: '16px' }}>
                 {submitting ? 'Publicando...' : 'Publicar en catálogo'}
@@ -822,6 +839,17 @@ export default function ReportarPage() {
               </div>
             )}
 
+            {hasPhotos && !analyzing && esUrgenteElegible(form.edad) && (
+              <label className="flex items-start gap-3 bg-red-50 border border-red-100 rounded-2xl p-4 mb-3 cursor-pointer touch-manipulation">
+                <input type="checkbox" checked={urgente} onChange={(e) => setUrgente(e.target.checked)} className="mt-0.5 w-4 h-4 accent-red-500 shrink-0" />
+                <span>
+                  <span className="flex items-center gap-1.5 text-sm font-semibold text-red-600"><Zap size={14} /> Marcar como adopción urgente</span>
+                  <span className="block text-xs text-red-400 mt-1">
+                    Los {form.edad === 'Cachorro' ? 'cachorros' : 'adultos mayores'} necesitan hogar pronto — se destacará en la categoría de adopción urgente.
+                  </span>
+                </span>
+              </label>
+            )}
             {hasPhotos && !analyzing && (
               <button onClick={handleSubmit} disabled={submitting || checkingDups} className="w-full bg-orange-500 text-white py-4 rounded-xl font-medium hover:bg-orange-600 transition disabled:opacity-60 touch-manipulation" style={{ fontSize: '16px' }}>
                 {checkingDups ? 'Verificando duplicados...' : submitting ? 'Publicando...' : 'Publicar en catálogo'}
