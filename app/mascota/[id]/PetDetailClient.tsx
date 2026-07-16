@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { supabase } from '../../../lib/supabase';
-import { MapPin, ArrowLeft, AlertTriangle, CheckCircle, Eye, PawPrint, HouseHeart, HeartPulse, Link2, Check } from 'lucide-react';
+import { MapPin, ArrowLeft, AlertTriangle, CheckCircle, Eye, PawPrint, HouseHeart, HeartPulse, Link2, Check, Home } from 'lucide-react';
 
 // Leaflet no soporta SSR — cargar el modal del mapa solo en el cliente
 const RefugioMapModal = dynamic(() => import('./RefugioMapModal'), { ssr: false });
@@ -29,6 +29,7 @@ type Pet = {
   images: string[];
   description: string;
   urgente: boolean;
+  hogar_temporal: boolean;
   lat: number | null;
   lng: number | null;
   refugio_id: string | null;
@@ -51,6 +52,7 @@ export default function PetDetailClient({ id }: { id: string }) {
   const [showForm, setShowForm] = useState(false);
   const [mapModal, setMapModal] = useState<'refugio' | 'veterinaria' | null>(null);
   const [linkCopied, setLinkCopied] = useState(false);
+  const [tipoSolicitud, setTipoSolicitud] = useState<'adopcion' | 'hogar_temporal'>('adopcion');
   const [avistamientos, setAvistamientos] = useState<Avistamiento[]>([]);
   const [currentImg, setCurrentImg] = useState(0);
   const [lightbox, setLightbox] = useState(false);
@@ -120,6 +122,7 @@ export default function PetDetailClient({ id }: { id: string }) {
         email_adoptante: form.email,
         telefono_adoptante: form.telefono ? `+56 ${form.telefono}` : '',
         mensaje: `Vivienda: ${form.vivienda}. ${form.motivo}`,
+        tipo: tipoSolicitud,
       }),
     });
 
@@ -286,6 +289,11 @@ export default function PetDetailClient({ id }: { id: string }) {
                     <AlertTriangle size={12} /> Adopción urgente
                   </span>
                 )}
+                {pet.hogar_temporal && (
+                  <span className={`absolute ${pet.urgente ? 'top-14' : 'top-4'} left-4 bg-sky-500 text-white text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1 z-10`}>
+                    <Home size={12} /> Busca hogar temporal
+                  </span>
+                )}
 
                 {allImages.length > 1 && (
                   <>
@@ -400,12 +408,22 @@ export default function PetDetailClient({ id }: { id: string }) {
                 <div className="flex flex-col gap-3">
                   <button
                     type="button"
-                    onClick={() => setShowForm(true)}
+                    onClick={() => { setTipoSolicitud('adopcion'); setShowForm(true); }}
                     className="w-full flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white rounded-2xl py-4 md:py-5 px-4 text-base md:text-lg font-semibold transition touch-manipulation"
                   >
                     <span className="text-center leading-snug">Quiero adoptar a {pet.name.replace(/\s+reportado$/i, '')}</span>
                     <PawPrint size={18} className="shrink-0" />
                   </button>
+                  {pet.hogar_temporal && (
+                    <button
+                      type="button"
+                      onClick={() => { setTipoSolicitud('hogar_temporal'); setShowForm(true); }}
+                      className="w-full flex items-center justify-center gap-2 bg-sky-500 hover:bg-sky-600 text-white rounded-2xl py-4 px-4 text-base font-semibold transition touch-manipulation"
+                    >
+                      <Home size={18} className="shrink-0" />
+                      <span className="text-center leading-snug">Quiero darle hogar temporal</span>
+                    </button>
+                  )}
                   <button
                     type="button"
                     onClick={shareOnWhatsApp}
@@ -444,7 +462,9 @@ export default function PetDetailClient({ id }: { id: string }) {
                 </div>
               ) : (
                 <div className="bg-white rounded-3xl border border-gray-100 p-8">
-                  <h2 className="text-xl font-semibold text-[#1a1a2e] mb-6">Formulario de adopción</h2>
+                  <h2 className="text-xl font-semibold text-[#1a1a2e] mb-6">
+                    {tipoSolicitud === 'hogar_temporal' ? 'Formulario de hogar temporal' : 'Formulario de adopción'}
+                  </h2>
                   <form onSubmit={handleSubmit} className="flex flex-col gap-4">
                     <div>
                       <label className="text-xs text-gray-400 block mb-1">Nombre completo</label>

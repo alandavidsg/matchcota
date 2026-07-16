@@ -7,6 +7,7 @@ import { MessageSquare, Phone, Mail, CheckCircle, XCircle, Clock, PawPrint } fro
 type Solicitud = {
   id: string;
   nombre_adoptante: string;
+  tipo?: string;
   email_adoptante: string;
   telefono_adoptante: string;
   mensaje: string;
@@ -102,9 +103,14 @@ export default function PanelSolicitudes() {
                           {new Date(s.created_at).toLocaleDateString('es-CL', { day: 'numeric', month: 'short', year: 'numeric' })}
                         </span>
                       </div>
-                      <span className={`flex items-center gap-1 text-xs px-2.5 py-1 rounded-full font-medium ${cfg.color}`}>
-                        <EstadoIcon size={11} /> {cfg.label}
-                      </span>
+                      <div className="flex items-center gap-1.5">
+                        <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${s.tipo === 'hogar_temporal' ? 'bg-sky-50 text-sky-600' : 'bg-orange-50 text-orange-500'}`}>
+                          {s.tipo === 'hogar_temporal' ? 'Hogar temporal' : 'Adopción'}
+                        </span>
+                        <span className={`flex items-center gap-1 text-xs px-2.5 py-1 rounded-full font-medium ${cfg.color}`}>
+                          <EstadoIcon size={11} /> {cfg.label}
+                        </span>
+                      </div>
                     </div>
 
                     {/* Adoptante */}

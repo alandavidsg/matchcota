@@ -12,16 +12,18 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { mascota_id, refugio_id, nombre_adoptante, email_adoptante, telefono_adoptante, mensaje } = body;
+    const { mascota_id, refugio_id, nombre_adoptante, email_adoptante, telefono_adoptante, mensaje, tipo } = body;
 
     if (!mascota_id || !nombre_adoptante || !email_adoptante) {
       return NextResponse.json({ error: 'Faltan campos requeridos' }, { status: 400 });
     }
 
+    const tipoSolicitud = tipo === 'hogar_temporal' ? 'hogar_temporal' : 'adopcion';
+
     // 1. Insertar solicitud
     const { data: solicitud, error: insertError } = await supabase
       .from('solicitudes')
-      .insert({ mascota_id, refugio_id: refugio_id ?? null, nombre_adoptante, email_adoptante, telefono_adoptante, mensaje })
+      .insert({ mascota_id, refugio_id: refugio_id ?? null, nombre_adoptante, email_adoptante, telefono_adoptante, mensaje, tipo: tipoSolicitud })
       .select('id')
       .single();
 
@@ -53,6 +55,7 @@ export async function POST(req: NextRequest) {
 
     // 4. Enviar email si hay destinatario (error no bloquea la solicitud)
     if (destinatario && process.env.RESEND_API_KEY) { try {
+      const esHogarTemporal = tipoSolicitud === 'hogar_temporal';
       const petName = mascota?.name ?? 'Mascota';
       const petType = mascota?.breed ? `${mascota.type} ${mascota.breed}` : mascota?.type ?? '';
       const petLocation = mascota?.location ?? '';
@@ -63,7 +66,9 @@ export async function POST(req: NextRequest) {
       await resend.emails.send({
         from: 'Matchcota <notificaciones@matchcota.cl>',
         to: destinatario,
-        subject: `🐾 Nueva solicitud de adopción para ${petName}`,
+        subject: esHogarTemporal
+          ? `🏡 Nueva solicitud de hogar temporal para ${petName}`
+          : `🐾 Nueva solicitud de adopción para ${petName}`,
         html: `
 <!DOCTYPE html>
 <html lang="es">
@@ -84,7 +89,7 @@ export async function POST(req: NextRequest) {
         <!-- Alerta -->
         <tr>
           <td style="background:#fff3e6;padding:16px 32px;border-bottom:1px solid #fde8c8;">
-            <p style="margin:0;color:#e86c00;font-weight:bold;font-size:15px;">🐾 ¡Tienes una nueva solicitud de adopción!</p>
+            <p style="margin:0;color:#e86c00;font-weight:bold;font-size:15px;">${esHogarTemporal ? '🏡 ¡Tienes una nueva solicitud de hogar temporal!' : '🐾 ¡Tienes una nueva solicitud de adopción!'}</p>
           </td>
         </tr>
 

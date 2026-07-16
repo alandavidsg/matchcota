@@ -31,6 +31,9 @@ export default function ReportarPage() {
   const [urgente, setUrgente] = useState(false);
   const esUrgenteElegible = (edad: string) => edad === 'Cachorro' || edad === 'Senior';
 
+  // Hogar temporal: hogar de tránsito mientras aparece adoptante definitivo
+  const [hogarTemporal, setHogarTemporal] = useState(false);
+
   // Detección de duplicados
   type DupMatch = { id: number; name: string; image: string; location: string; similitud: number; razon: string };
   const [dupMatches, setDupMatches] = useState<DupMatch[]>([]);
@@ -308,6 +311,7 @@ export default function ReportarPage() {
       description: `${adoptForm.descripcion}. Color: ${adoptForm.color}${adoptForm.sexo ? `. Sexo: ${adoptForm.sexo}` : ''}. Contacto: ${adoptForm.contactoNombre}, ${adoptForm.telefono}, ${adoptForm.email}`,
       available: true,
       urgente: esUrgenteElegible(adoptForm.edad) && urgente,
+      hogar_temporal: hogarTemporal,
       lat: coords?.lat ?? null,
       lng: coords?.lng ?? null,
     }).select('id').single();
@@ -346,6 +350,7 @@ export default function ReportarPage() {
       description: `${form.descripcion}. Color: ${form.color}`,
       available: true,
       urgente: esUrgenteElegible(form.edad) && urgente,
+      hogar_temporal: hogarTemporal,
       avistamientos_count: 1,
     }).select('id').single();
 
@@ -687,6 +692,17 @@ export default function ReportarPage() {
               </label>
             )}
             {hasPhotos && (
+              <label className="flex items-start gap-3 bg-sky-50 border border-sky-100 rounded-2xl p-4 mb-3 cursor-pointer touch-manipulation">
+                <input type="checkbox" checked={hogarTemporal} onChange={(e) => setHogarTemporal(e.target.checked)} className="mt-0.5 w-4 h-4 accent-sky-500 shrink-0" />
+                <span>
+                  <span className="flex items-center gap-1.5 text-sm font-semibold text-sky-600"><Home size={14} /> Necesita hogar temporal</span>
+                  <span className="block text-xs text-sky-400 mt-1">
+                    Se buscará un hogar de tránsito que lo cuide mientras aparece su familia definitiva.
+                  </span>
+                </span>
+              </label>
+            )}
+            {hasPhotos && (
               <button onClick={handleAdoptSubmit} disabled={submitting} className="w-full bg-orange-500 text-white py-4 rounded-xl font-medium hover:bg-orange-600 transition disabled:opacity-60 touch-manipulation" style={{ fontSize: '16px' }}>
                 {submitting ? 'Publicando...' : 'Publicar en catálogo'}
               </button>
@@ -846,6 +862,17 @@ export default function ReportarPage() {
                   <span className="flex items-center gap-1.5 text-sm font-semibold text-red-600"><Zap size={14} /> Marcar como adopción urgente</span>
                   <span className="block text-xs text-red-400 mt-1">
                     Los {form.edad === 'Cachorro' ? 'cachorros' : 'adultos mayores'} necesitan hogar pronto — se destacará en la categoría de adopción urgente.
+                  </span>
+                </span>
+              </label>
+            )}
+            {hasPhotos && !analyzing && (
+              <label className="flex items-start gap-3 bg-sky-50 border border-sky-100 rounded-2xl p-4 mb-3 cursor-pointer touch-manipulation">
+                <input type="checkbox" checked={hogarTemporal} onChange={(e) => setHogarTemporal(e.target.checked)} className="mt-0.5 w-4 h-4 accent-sky-500 shrink-0" />
+                <span>
+                  <span className="flex items-center gap-1.5 text-sm font-semibold text-sky-600"><Home size={14} /> Necesita hogar temporal</span>
+                  <span className="block text-xs text-sky-400 mt-1">
+                    Se buscará un hogar de tránsito que lo cuide mientras aparece su familia definitiva.
                   </span>
                 </span>
               </label>

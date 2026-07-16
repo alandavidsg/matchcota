@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { supabase } from '../../lib/supabase';
-import { MapPin, Heart, AlertTriangle, PawPrint, Eye } from 'lucide-react';
+import { MapPin, Heart, AlertTriangle, PawPrint, Eye, Home } from 'lucide-react';
 
 type Pet = {
   id: number;
@@ -14,6 +14,7 @@ type Pet = {
   location: string;
   image: string;
   urgente: boolean;
+  hogar_temporal: boolean;
   lat: number | null;
   lng: number | null;
   avistamientos_count: number | null;
@@ -88,6 +89,8 @@ function CatalogoContent() {
     ? pets.filter((p) => favorites.includes(p.id))
     : activeFilter === 'urgente'
     ? pets.filter((p) => p.urgente)
+    : activeFilter === 'hogar_temporal'
+    ? pets.filter((p) => p.hogar_temporal)
     : pets.filter((p) => p.type === activeFilter);
 
   const filteredPets = activeCityFilter === 'todas'
@@ -106,6 +109,7 @@ function CatalogoContent() {
     Pájaro: 'Pájaros en adopción',
     Conejo: 'Conejos en adopción',
     urgente: 'Adopción urgente',
+    hogar_temporal: 'Buscan hogar temporal',
     Animal: 'Animales exóticos en adopción',
     favoritos: 'Mis favoritos',
   };
@@ -155,6 +159,18 @@ function CatalogoContent() {
               </span>
             )}
           </button>
+
+          <button
+            onClick={() => setActiveFilter(activeFilter === 'hogar_temporal' ? 'todos' : 'hogar_temporal')}
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm border transition font-medium ${
+              activeFilter === 'hogar_temporal'
+                ? 'bg-sky-500 text-white border-sky-500'
+                : 'bg-white text-gray-500 border-gray-200 hover:border-sky-400 hover:text-sky-500'
+            }`}
+          >
+            <Home size={14} />
+            Hogar temporal
+          </button>
         </div>
 
         {loading ? (
@@ -172,6 +188,11 @@ function CatalogoContent() {
                     {pet.urgente && (
                       <span className="absolute top-2 left-2 bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded-full flex items-center gap-1">
                         <AlertTriangle size={10} /> URGENTE
+                      </span>
+                    )}
+                    {pet.hogar_temporal && (
+                      <span className={`absolute ${pet.urgente ? 'top-9' : 'top-2'} left-2 bg-sky-500 text-white text-[10px] font-bold px-2 py-1 rounded-full flex items-center gap-1`}>
+                        <Home size={10} /> HOGAR TEMPORAL
                       </span>
                     )}
                     {(pet.avistamientos_count ?? 1) > 1 && (
