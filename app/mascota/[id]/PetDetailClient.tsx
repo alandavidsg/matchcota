@@ -414,16 +414,6 @@ export default function PetDetailClient({ id }: { id: string }) {
                     <span className="text-center leading-snug">Quiero adoptar a {pet.name.replace(/\s+reportado$/i, '')}</span>
                     <PawPrint size={18} className="shrink-0" />
                   </button>
-                  {pet.hogar_temporal && (
-                    <button
-                      type="button"
-                      onClick={() => { setTipoSolicitud('hogar_temporal'); setShowForm(true); }}
-                      className="w-full flex items-center justify-center gap-2 bg-sky-500 hover:bg-sky-600 text-white rounded-2xl py-4 px-4 text-base font-semibold transition touch-manipulation"
-                    >
-                      <Home size={18} className="shrink-0" />
-                      <span className="text-center leading-snug">Quiero darle hogar temporal</span>
-                    </button>
-                  )}
                   <button
                     type="button"
                     onClick={shareOnWhatsApp}
@@ -466,6 +456,27 @@ export default function PetDetailClient({ id }: { id: string }) {
                     {tipoSolicitud === 'hogar_temporal' ? 'Formulario de hogar temporal' : 'Formulario de adopción'}
                   </h2>
                   <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+                    {pet.hogar_temporal && (
+                      <div>
+                        <label className="text-xs text-gray-400 block mb-1">Tipo de solicitud</label>
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setTipoSolicitud('adopcion')}
+                            className={`flex-1 flex items-center justify-center gap-1.5 rounded-xl py-3 text-sm font-semibold transition touch-manipulation ${tipoSolicitud === 'adopcion' ? 'bg-orange-500 text-white' : 'bg-gray-100 text-gray-500'}`}
+                          >
+                            <PawPrint size={16} className="shrink-0" /> Adopción
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setTipoSolicitud('hogar_temporal')}
+                            className={`flex-1 flex items-center justify-center gap-1.5 rounded-xl py-3 text-sm font-semibold transition touch-manipulation ${tipoSolicitud === 'hogar_temporal' ? 'bg-sky-500 text-white' : 'bg-gray-100 text-gray-500'}`}
+                          >
+                            <Home size={16} className="shrink-0" /> Hogar temporal
+                          </button>
+                        </div>
+                      </div>
+                    )}
                     <div>
                       <label className="text-xs text-gray-400 block mb-1">Nombre completo</label>
                       <input type="text" placeholder="Tu nombre" required value={form.nombre} onChange={(e) => setForm({ ...form, nombre: e.target.value })} className="w-full text-sm px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-orange-400" style={{ fontSize: '16px' }} />
