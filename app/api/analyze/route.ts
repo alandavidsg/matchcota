@@ -33,7 +33,8 @@ export async function POST(req: NextRequest) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+        model: 'qwen/qwen3.6-27b',
+        reasoning_effort: 'none',
         messages: [
           {
             role: 'user',
@@ -57,7 +58,7 @@ export async function POST(req: NextRequest) {
             ],
           },
         ],
-        max_tokens: 300,
+        max_tokens: 400,
         temperature: 0.1,
       }),
     });
