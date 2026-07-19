@@ -120,12 +120,18 @@ export default function RefugioMapModal({ petName, petLocation, lat, lng, tipo =
 
         <div className="p-5">
           {!loading && lugar ? (
-            <div className="mb-3">
-              <p className="text-sm font-semibold text-[#1a1a2e]">{lugar.nombre}</p>
-              <p className="text-xs text-gray-400">
-                a {lugar.distancia} km
-                {lugar.direccion ? ` · ${lugar.direccion}` : ''}
-              </p>
+            <div className="mb-4 bg-orange-50 border border-orange-100 rounded-2xl p-4 flex items-start gap-3">
+              <MapPin size={22} className="text-orange-500 shrink-0 mt-0.5" />
+              <div className="min-w-0">
+                <p className="text-[11px] uppercase tracking-wide text-orange-500 font-semibold mb-0.5">
+                  {tipo === 'veterinaria' ? 'Vas a llegar a esta veterinaria' : 'Vas a llegar a este refugio'}
+                </p>
+                <p className="text-lg font-bold text-[#1a1a2e] leading-tight">{lugar.nombre}</p>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  a {lugar.distancia} km
+                  {lugar.direccion ? ` · ${lugar.direccion}` : ''}
+                </p>
+              </div>
             </div>
           ) : (
             <p className="text-xs text-gray-400 mb-3">
