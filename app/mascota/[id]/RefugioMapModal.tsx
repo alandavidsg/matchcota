@@ -67,12 +67,16 @@ export default function RefugioMapModal({ petName, petLocation, lat, lng, tipo =
     return () => { cancelado = true; };
   }, [lat, lng, tipo]);
 
-  // Destino exacto cuando tenemos el lugar (por coordenadas, no por texto).
-  // Si no hay lugar, cae a la búsqueda de texto anterior como último recurso.
+  // Destino por coordenadas EXACTAS del lugar de Foursquare, con etiqueta forzada
+  // `lat,lng (Nombre)` para que el pin del mapa muestre el mismo nombre que el panel
+  // (si se pasan solo coords, Google lo rotula con el negocio que él tenga en ese
+  // punto, que puede no coincidir con Foursquare). Sin lugar, cae a búsqueda de texto.
   const destinoTexto = petLocation
     ? `${t.query} cerca de ${petLocation}`
     : `${t.query} cerca de ${lat},${lng}`;
-  const destino = lugar ? `${lugar.lat},${lugar.lng}` : encodeURIComponent(destinoTexto);
+  const destino = lugar
+    ? encodeURIComponent(`${lugar.lat},${lugar.lng} (${lugar.nombre})`)
+    : encodeURIComponent(destinoTexto);
   const embedUrl = `https://maps.google.com/maps?saddr=${lat},${lng}&daddr=${destino}&hl=es&output=embed`;
   const rutaUrl = `https://www.google.com/maps/dir/?api=1&origin=${lat},${lng}&destination=${destino}`;
   const todosUrl = `https://www.google.com/maps/search/${encodeURIComponent(t.query)}/@${lat},${lng},12z`;
