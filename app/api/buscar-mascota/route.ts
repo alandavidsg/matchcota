@@ -20,6 +20,30 @@ type Pet = {
 
 type Match = Pet & { similitud: number; razon: string };
 
+// La IA a veces devuelve el nombre de la raza en español y la BD lo tiene en inglés (o viceversa).
+// Sinónimos de razas comunes para que el filtro por palabra clave encuentre ambas variantes.
+const RAZA_SINONIMOS: Record<string, string[]> = {
+  caniche: ['poodle'],
+  poodle: ['caniche'],
+  pastor: ['shepherd'],
+  shepherd: ['pastor'],
+  salchicha: ['dachshund', 'teckel'],
+  dachshund: ['salchicha', 'teckel'],
+  teckel: ['salchicha', 'dachshund'],
+  bulldog: ['bulldog'],
+  chihuahua: ['chihuahua'],
+  labrador: ['labrador'],
+  husky: ['husky'],
+};
+
+function expandirSinonimos(keywords: string[]): string[] {
+  const expandido = new Set(keywords);
+  for (const kw of keywords) {
+    (RAZA_SINONIMOS[kw] ?? []).forEach((s) => expandido.add(s));
+  }
+  return [...expandido];
+}
+
 type Analysis = {
   tipo: string;
   raza: string;
@@ -146,11 +170,13 @@ export async function POST(req: NextRequest) {
     }
 
     // 2. Buscar en catálogo por raza (principal) y/o tipo (fallback)
-    //    Extrae palabras clave de la raza para buscar variantes
-    const razaKeywords = analysis.raza
-      .toLowerCase()
-      .split(' ')
-      .filter((w) => w.length > 3); // palabras significativas
+    //    Extrae palabras clave de la raza para buscar variantes (+ sinónimos ES/EN)
+    const razaKeywords = expandirSinonimos(
+      analysis.raza
+        .toLowerCase()
+        .split(' ')
+        .filter((w) => w.length > 3) // palabras significativas
+    );
 
     let query = supabase
       .from('mascotas')
@@ -174,8 +200,12 @@ export async function POST(req: NextRequest) {
       return razaKeywords.some((kw) => petBreed.includes(kw));
     });
 
-    // Si no hay coincidencias por raza, usar todos los del mismo tipo
-    const petsToCompare = breedMatches.length > 0 ? breedMatches : allPets;
+    // Si no hay coincidencias por raza, usar todos los del mismo tipo.
+    // Tope de mascotas a comparar visualmente: cada lote de 3 fotos gasta ~5.700 tokens
+    // contra un límite de Groq de 8.000 tokens/minuto, así que sin tope un catálogo grande
+    // agota el rate limit a mitad de camino y el resto de los lotes vuelve vacío en silencio.
+    const MAX_COMPARE = 12;
+    const petsToCompare = (breedMatches.length > 0 ? breedMatches : allPets).slice(0, MAX_COMPARE);
     console.log(`Comparing against ${petsToCompare.length} pets (breed match: ${breedMatches.length})`);
 
     // 4. Ranking visual en lotes de 3 (qwen/qwen3.6-27b acepta máximo 3 imágenes por request)
