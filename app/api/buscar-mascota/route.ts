@@ -7,7 +7,22 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
-const GROQ_API_KEY = process.env.GROQ_API_KEY!;
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY!;
+const GEMINI_MODEL = 'gemini-3.5-flash';
+
+// Descarga una imagen por URL y la convierte a base64 para mandarla inline a Gemini
+// (a diferencia de Groq, la API de Gemini no puede descargar URLs remotas, necesita los bytes).
+async function fetchImageAsBase64(url: string): Promise<{ data: string; mimeType: string } | null> {
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    const mimeType = res.headers.get('content-type') || 'image/jpeg';
+    const buffer = await res.arrayBuffer();
+    return { data: Buffer.from(buffer).toString('base64'), mimeType };
+  } catch {
+    return null;
+  }
+}
 
 type Pet = {
   id: number;
@@ -53,35 +68,39 @@ type Analysis = {
 
 // Paso 1: analiza la foto y extrae tipo, raza, color y descripción
 async function analyzeLostPet(imageBase64: string): Promise<Analysis> {
-  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${GROQ_API_KEY}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      model: 'qwen/qwen3.6-27b',
-      reasoning_effort: 'none',
-      messages: [{
-        role: 'user',
-        content: [
-          { type: 'image_url', image_url: { url: imageBase64 } },
-          {
-            type: 'text',
-            text: `Analiza esta mascota y responde ÚNICAMENTE con JSON válido sin texto adicional:
+  const match = imageBase64.match(/^data:(.+?);base64,(.+)$/);
+  const mimeType = match?.[1] ?? 'image/jpeg';
+  const data = match?.[2] ?? imageBase64;
+
+  const response = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{
+          parts: [
+            { inline_data: { mime_type: mimeType, data } },
+            {
+              text: `Analiza esta mascota y responde ÚNICAMENTE con JSON válido sin texto adicional:
 {
   "tipo": "Perro" o "Gato" u otro tipo,
   "raza": "nombre exacto de la raza en español, ej: Husky Siberiano, Golden Retriever, Mestizo",
   "color": "colores principales del pelaje",
   "descripcion": "descripción visual detallada en 2-3 oraciones: raza, color, marcas distintivas, tamaño, características únicas"
 }`,
-          },
-        ],
-      }],
-      max_tokens: 300,
-      temperature: 0.1,
-    }),
-  });
+            },
+          ],
+        }],
+        generationConfig: { thinkingConfig: { thinkingBudget: 0 } },
+      }),
+    }
+  );
 
-  const data = await response.json();
-  const text: string = data.choices?.[0]?.message?.content ?? '';
+  if (!response.ok) return { tipo: '', raza: '', color: '', descripcion: '' };
+
+  const result = await response.json();
+  const text: string = result.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
   try {
     const clean = text.replace(/```json\n?|\n?```/g, '').trim();
     const jsonMatch = clean.match(/\{[\s\S]*\}/);
@@ -94,41 +113,44 @@ async function analyzeLostPet(imageBase64: string): Promise<Analysis> {
 async function rankByVisualSimilarity(description: string, pets: Pet[]): Promise<Match[]> {
   if (pets.length === 0) return [];
 
-  const contents: object[] = [
+  // Gemini necesita los bytes de cada foto (no acepta URLs remotas como Groq)
+  const imagenes = await Promise.all(pets.map((pet) => fetchImageAsBase64(pet.image)));
+
+  const parts: object[] = [
     {
-      type: 'text',
       text: `Mascota buscada:\n"${description}"\n\nOrdena las siguientes fotos de mascotas por similitud visual con la descripción anterior. Considera color del pelaje, marcas, tamaño y características únicas.`,
     },
   ];
 
   pets.forEach((pet, i) => {
-    contents.push({ type: 'image_url', image_url: { url: pet.image } });
-    contents.push({ type: 'text', text: `Foto ${i + 1}: ID=${pet.id}, Nombre="${pet.name}"` });
+    const img = imagenes[i];
+    if (!img) return; // foto no descargable, se omite de la comparación
+    parts.push({ inline_data: { mime_type: img.mimeType, data: img.data } });
+    parts.push({ text: `Foto: ID=${pet.id}, Nombre="${pet.name}"` });
   });
 
-  contents.push({
-    type: 'text',
+  parts.push({
     text: `Responde ÚNICAMENTE con JSON válido sin bloques de código:
 [{"id": <número>, "similitud": <0-100>, "razon": "<razón breve en español>"}]
 Incluye todas las mascotas.`,
   });
 
-  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${GROQ_API_KEY}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      model: 'qwen/qwen3.6-27b',
-      reasoning_effort: 'none',
-      messages: [{ role: 'user', content: contents }],
-      max_tokens: 600,
-      temperature: 0.1,
-    }),
-  });
+  const response = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts }],
+        generationConfig: { thinkingConfig: { thinkingBudget: 0 } },
+      }),
+    }
+  );
 
   if (!response.ok) return [];
 
-  const data = await response.json();
-  const text: string = data.choices?.[0]?.message?.content ?? '';
+  const result = await response.json();
+  const text: string = result.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
 
   try {
     const clean = text.replace(/```json\n?|\n?```/g, '').trim();
@@ -201,15 +223,14 @@ export async function POST(req: NextRequest) {
     });
 
     // Si no hay coincidencias por raza, usar todos los del mismo tipo.
-    // Tope de mascotas a comparar visualmente: cada lote de 3 fotos gasta ~5.700 tokens
-    // contra un límite de Groq de 8.000 tokens/minuto, así que sin tope un catálogo grande
-    // agota el rate limit a mitad de camino y el resto de los lotes vuelve vacío en silencio.
-    const MAX_COMPARE = 12;
+    // Tope de mascotas a comparar visualmente (Gemini soporta bastantes imágenes por
+    // request, pero se acota igual para no descargar/comparar catálogos enormes).
+    const MAX_COMPARE = 18;
     const petsToCompare = (breedMatches.length > 0 ? breedMatches : allPets).slice(0, MAX_COMPARE);
     console.log(`Comparing against ${petsToCompare.length} pets (breed match: ${breedMatches.length})`);
 
-    // 4. Ranking visual en lotes de 3 (qwen/qwen3.6-27b acepta máximo 3 imágenes por request)
-    const BATCH = 3;
+    // 4. Ranking visual en lotes de 6
+    const BATCH = 6;
     const allMatches: Match[] = [];
     for (let i = 0; i < petsToCompare.length; i += BATCH) {
       const batch = petsToCompare.slice(i, i + BATCH);
