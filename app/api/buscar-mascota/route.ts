@@ -33,7 +33,8 @@ async function analyzeLostPet(imageBase64: string): Promise<Analysis> {
     method: 'POST',
     headers: { Authorization: `Bearer ${GROQ_API_KEY}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+      model: 'qwen/qwen3.6-27b',
+      reasoning_effort: 'none',
       messages: [{
         role: 'user',
         content: [
@@ -92,7 +93,8 @@ Incluye todas las mascotas.`,
     method: 'POST',
     headers: { Authorization: `Bearer ${GROQ_API_KEY}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+      model: 'qwen/qwen3.6-27b',
+      reasoning_effort: 'none',
       messages: [{ role: 'user', content: contents }],
       max_tokens: 600,
       temperature: 0.1,
@@ -176,8 +178,8 @@ export async function POST(req: NextRequest) {
     const petsToCompare = breedMatches.length > 0 ? breedMatches : allPets;
     console.log(`Comparing against ${petsToCompare.length} pets (breed match: ${breedMatches.length})`);
 
-    // 4. Ranking visual en lotes de 5
-    const BATCH = 5;
+    // 4. Ranking visual en lotes de 3 (qwen/qwen3.6-27b acepta máximo 3 imágenes por request)
+    const BATCH = 3;
     const allMatches: Match[] = [];
     for (let i = 0; i < petsToCompare.length; i += BATCH) {
       const batch = petsToCompare.slice(i, i + BATCH);
