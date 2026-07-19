@@ -91,7 +91,9 @@ function CatalogoContent() {
     ? pets.filter((p) => p.urgente)
     : activeFilter === 'hogar_temporal'
     ? pets.filter((p) => p.hogar_temporal)
-    : pets.filter((p) => p.type === activeFilter);
+    : activeFilter === 'Animal'
+    ? pets.filter((p) => !['perro', 'gato'].includes(p.type?.toLowerCase()))
+    : pets.filter((p) => p.type?.toLowerCase() === activeFilter.toLowerCase());
 
   const filteredPets = activeCityFilter === 'todas'
     ? byType

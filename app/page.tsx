@@ -391,7 +391,9 @@ export default function Home() {
             ].map((cat) => {
               const catPets = cat.value === 'urgente'
                 ? pets.filter((p) => p.urgente)
-                : pets.filter((p) => p.type === cat.value);
+                : cat.value === 'Animal'
+                ? pets.filter((p) => !['perro', 'gato'].includes(p.type?.toLowerCase()))
+                : pets.filter((p) => p.type?.toLowerCase() === cat.value.toLowerCase());
               const count = catPets.length;
               return (
                 <a
