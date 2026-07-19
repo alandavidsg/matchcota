@@ -1,0 +1,159 @@
+MATCHCOTA - ANALISIS DE COSTOS DE INFRAESTRUCTURA POR TRAFICO
+Generado: 2026-07-19
+Tipo de cambio usado: 1 USD ~= 930 CLP (referencia julio 2026)
+
+===============================================================
+1. RESUMEN
+===============================================================
+
+Servicios externos con costo potencial identificados en el codigo:
+  - MercadoPago      -> comision sobre donaciones (nunca gasto de bolsillo)
+  - Gemini (Google)   -> busqueda visual de mascotas perdidas
+  - Groq              -> analisis de foto al publicar una mascota
+  - Supabase          -> base de datos + storage de fotos
+  - GNews             -> noticias sobre mascotas en la home
+  - Foursquare        -> veterinarias/refugios cercanos
+
+Confirmado por grep sobre app/ y lib/: no hay otras integraciones de IA
+(OpenAI, Anthropic, etc.) ni otras APIs externas de pago fuera de esta lista.
+
+===============================================================
+2. CAMBIOS YA IMPLEMENTADOS EN ESTA SESION
+===============================================================
+
+2.1 Control de gasto de IA (aviso, sin bloqueo automatico)
+  Archivos: supabase-ai-usage.sql, lib/aiUsage.ts
+  Modificados: app/api/buscar-mascota/route.ts, app/api/analyze/route.ts
+  - Tabla ai_usage en Supabase cuenta llamadas GLOBALES por dia (el rate
+    limit anterior era por IP y por instancia serverless, no servia como
+    freno real de costo agregado).
+  - Si gemini_search llega a 80 llamadas/dia o groq_analyze a 300/dia,
+    se envia un email de aviso via Resend a alansaldias@gmail.com
+    (configurable con env var AI_ALERT_EMAIL). No bloquea la funcion.
+  - PENDIENTE: correr supabase-ai-usage.sql manualmente en el SQL Editor
+    de Supabase antes de deployar (no tengo acceso directo a la DB).
+
+2.2 Cacheo de analisis visual (Gemini) - reduce costo e imagenes descargadas
+  Archivo: app/api/buscar-mascota/route.ts
+  - Antes: cada busqueda de mascota perdida re-descargaba y re-enviaba
+    como imagen las fotos de hasta 18 mascotas del catalogo, en lotes
+    de 6 (hasta 4 llamadas a Gemini con imagenes por busqueda).
+  - Ahora: cada mascota del catalogo se describe con Gemini UNA SOLA VEZ
+    en su vida (columna nueva mascotas.visual_description) y se cachea.
+    El ranking pasa a ser 1 sola llamada de texto (sin imagenes) contra
+    las descripciones ya cacheadas.
+  - Efecto: ~4 llamadas con imagenes por busqueda -> 1 llamada con imagen
+    + 1 de texto en regimen normal. Tambien cae fuerte el egress de
+    Supabase Storage (cada foto del catalogo se descarga una sola vez
+    en su vida, no en cada busqueda ajena).
+
+2.3 Cacheo de "lugares cercanos" (Foursquare)
+  Archivo: app/api/cercanos/route.ts
+  - Antes: sin cache, una llamada real a Foursquare por cada usuario que
+    pedia veterinarias/refugios cercanos.
+  - Ahora: las coordenadas se redondean a ~1.1km de grilla antes de
+    armar la URL de Foursquare, y esa fetch queda cacheada 24h por Next.js
+    (next.revalidate=86400). Usuarios cercanos entre si comparten cache.
+    La distancia mostrada al usuario se sigue calculando con sus
+    coordenadas exactas (no pierde precision ahi), solo se comparte
+    el resultado de "que lugares hay cerca".
+  - Motivo: Foursquare bajo su free tier de 10.000 a 500 llamadas Pro
+    gratis al mes en junio 2026; sin cache se agotaba muy rapido.
+
+===============================================================
+3. COSTO POR SERVICIO
+===============================================================
+
+3.1 Gemini (busqueda visual de mascotas perdidas)
+  Modelo: gemini-3.5-flash
+  Precio: USD 1.50 / millon tokens input (imagen y texto al mismo precio),
+          USD 9.00 / millon tokens output
+  Costo por busqueda (con cache aplicada, catalogo ya "tibio"): ~USD 0.010
+  Costo por busqueda (worst case, catalogo nuevo/backfill):     ~USD 0.012
+  Equivalente CLP: ~9 CLP por busqueda en regimen normal
+
+3.2 Groq (analisis de foto al publicar mascota)
+  Modelo: qwen/qwen3.6-27b (clase qwen3-32b)
+  Precio: USD 0.29 / millon tokens input, USD 0.59 / millon tokens output
+  Costo por analisis: ~USD 0.0004
+  Equivalente CLP: ~0.35 CLP por publicacion (practicamente gratis)
+
+3.3 MercadoPago (donaciones)
+  No es costo de infraestructura, es comision por transaccion:
+    3.19% + IVA si el dinero esta disponible al instante
+    2.89% + IVA si esta disponible en 10 dias
+    (2.59% / 2.29% + IVA como vendedor nuevo)
+  Solo se cobra si hay una donacion aprobada. Nunca sale de bolsillo,
+  sale del monto donado.
+
+3.4 Supabase (base de datos + storage de fotos)
+  Free tier: 500MB DB, 1GB storage, 5GB egress/mes, hasta 2 proyectos.
+  Plan Pro: USD 25/mes fijo (~23.250 CLP) -> 8GB DB, 100GB storage,
+            250GB egress incluido. Despues de eso, USD 0.09/GB extra.
+  No es un costo gradual: es un escalon. 0 CLP hasta agotar el free
+  tier, despues salto fijo a ~23.250 CLP/mes.
+  Nota: el cacheo de Gemini (punto 2.2) reduce el egress porque ya no
+  se re-descargan las fotos del catalogo en cada busqueda ajena.
+
+3.5 GNews (noticias en la home)
+  Ruta cacheada 1h (next.revalidate=3600) -> maximo ~24 llamadas/dia
+  sin importar el trafico. Free tier: 100 llamadas/dia.
+  EN VOLUMEN: siempre gratis con el trafico actual del sitio.
+  OJO - no es solo tema de plata: el plan free de GNews prohibe
+  explicitamente uso comercial y entrega noticias con 12h de delay.
+  Si el sitio va a tener donaciones/publicidad, esto es un tema de
+  licencia, no de cuota. Primer plan que permite uso comercial:
+  Essential, ~EUR 49.99/mes (~46.500 CLP/mes).
+
+3.6 Foursquare (veterinarias/refugios cercanos)
+  Free tier (desde junio 2026): 500 llamadas Pro gratis al mes (~16/dia).
+  Sin cache, este era el servicio con mas riesgo de gasto real apenas
+  hubiera trafico moderado. Con el cacheo aplicado (punto 2.3), varios
+  usuarios de la misma zona comparten la misma llamada durante 24h,
+  estirando bastante esas 500 llamadas gratis.
+  Si se supera el free tier: pago por uso, ~USD 18.75 por cada 1.000
+  llamadas adicionales (~17.400 CLP / 1.000 llamadas).
+
+===============================================================
+4. ESTIMADO MENSUAL EN CLP - SOLO IA (GEMINI + GROQ)
+===============================================================
+
+Escenario                          Busquedas/dia  Public./dia  CLP/mes
+Lanzamiento tranquilo              5              10           ~1.500
+Trafico moderado                   20             40           ~6.000
+Umbral de aviso por email          80             300          ~25.500
+Viral sin control (10x umbral)     800            1000         ~234.000
+
+===============================================================
+5. RIESGOS / PENDIENTES ABIERTOS
+===============================================================
+
+  - Sin tope de gasto duro en Gemini/Groq (decision explicita del
+    usuario: avisar por email, no bloquear). El unico freno ante un
+    pico fuerte es que el aviso llega el mismo dia que se cruza el
+    umbral configurado (80 busquedas/dia o 300 analisis/dia).
+  - GNews: revisar si el uso actual entra en conflicto con la clausula
+    de "no uso comercial" del plan free una vez que el sitio tenga
+    donaciones o publicidad activa.
+  - Foursquare: el free tier de 500 llamadas/mes es nuevo (junio 2026)
+    y bastante ajustado; conviene monitorear cuantas llamadas reales
+    se hacen por mes una vez en produccion, el cache de 24h ayuda pero
+    no garantiza quedar siempre bajo el limite si hay trafico disperso
+    geograficamente (poca superposicion de "celdas" de ~1.1km).
+  - Vercel (hosting) no fue analizado en detalle en esta sesion; el
+    plan Hobby gratuito probablemente alcanza en las etapas iniciales.
+  - Falta correr supabase-ai-usage.sql en Supabase antes de deployar
+    los cambios de esta sesion (ver punto 2.1).
+
+===============================================================
+Fuentes consultadas (julio 2026)
+===============================================================
+  - Gemini API pricing: https://www.tldl.io/resources/google-gemini-api-pricing
+  - Gemini 3.5 Flash pricing: https://devtk.ai/en/models/gemini-3-5-flash/
+  - Groq API pricing: https://www.aipricing.guru/groq-pricing/
+  - Supabase pricing: https://uibakery.io/blog/supabase-pricing
+  - Comisiones MercadoPago Chile: https://comocobro.cl/medios-de-pago/mercado-pago
+  - GNews pricing: https://gnews.io/pricing
+  - Foursquare Places API pricing: https://apispine.com/foursquare/pricing
+  - Cambios de free tier Foursquare: https://docs.foursquare.com/developer/reference/upcoming-changes
+  - Dolar observado CLP julio 2026: https://dolarhoy.net/chile/

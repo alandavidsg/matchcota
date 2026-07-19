@@ -4,7 +4,7 @@ import { getRefugioFromRequest, supabaseAdmin } from '../../../../../lib/supabas
 async function getMascotaIfOwned(id: string, refugioId: string) {
   const { data } = await supabaseAdmin
     .from('mascotas')
-    .select('id')
+    .select('id, image')
     .eq('id', id)
     .eq('refugio_id', refugioId)
     .single();
@@ -22,9 +22,16 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   const body = await req.json();
   const { name, type, breed, age, location, description, image, urgente, available } = body;
 
+  // Si cambió la foto, invalidar la descripción visual cacheada (se regenera en la
+  // próxima búsqueda de perdidos a partir de la nueva imagen). Sin esto, el ranking
+  // por texto seguiría comparando contra la foto anterior.
+  const imageChanged = image !== undefined && image !== owned.image;
+  const update: Record<string, unknown> = { name, type, breed, age, location, description, image, urgente, available };
+  if (imageChanged) update.visual_description = null;
+
   const { data, error } = await supabaseAdmin
     .from('mascotas')
-    .update({ name, type, breed, age, location, description, image, urgente, available })
+    .update(update)
     .eq('id', id)
     .select()
     .single();

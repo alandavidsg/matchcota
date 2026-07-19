@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { rateLimit } from '../../../lib/rateLimit';
+import { trackAiUsage } from '../../../lib/aiUsage';
+import { supabaseAdmin } from '../../../lib/supabase-admin';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -31,6 +33,7 @@ type Pet = {
   breed: string;
   image: string;
   location: string;
+  visual_description: string | null;
 };
 
 type Match = Pet & { similitud: number; razon: string };
@@ -66,12 +69,10 @@ type Analysis = {
   descripcion: string;
 };
 
-// Paso 1: analiza la foto y extrae tipo, raza, color y descripción
-async function analyzeLostPet(imageBase64: string): Promise<Analysis> {
-  const match = imageBase64.match(/^data:(.+?);base64,(.+)$/);
-  const mimeType = match?.[1] ?? 'image/jpeg';
-  const data = match?.[2] ?? imageBase64;
-
+// Analiza una foto (bytes ya descargados) y extrae tipo, raza, color y descripción.
+// Se usa tanto para la foto de la mascota perdida como (una sola vez por mascota,
+// con caché en `visual_description`) para el catálogo.
+async function analyzePetImage(data: string, mimeType: string): Promise<Analysis> {
   const response = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`,
     {
@@ -109,31 +110,31 @@ async function analyzeLostPet(imageBase64: string): Promise<Analysis> {
   return { tipo: '', raza: '', color: '', descripcion: '' };
 }
 
-// Paso 2: ranking visual entre mascotas ya filtradas por raza/tipo
-async function rankByVisualSimilarity(description: string, pets: Pet[]): Promise<Match[]> {
+// Genera y cachea la descripción visual de una mascota del catálogo (solo la primera
+// vez que aparece en una búsqueda; de ahí en adelante se reusa desde la BD, sin
+// volver a descargar la foto ni a llamar a Gemini por ella).
+async function getOrCreateVisualDescription(pet: Pet): Promise<string | null> {
+  if (pet.visual_description) return pet.visual_description;
+
+  const img = await fetchImageAsBase64(pet.image);
+  if (!img) return null;
+
+  const analysis = await analyzePetImage(img.data, img.mimeType);
+  if (!analysis.descripcion) return null;
+
+  await supabaseAdmin.from('mascotas').update({ visual_description: analysis.descripcion }).eq('id', pet.id);
+  return analysis.descripcion;
+}
+
+// Ranking visual por texto: compara la descripción de la mascota buscada contra las
+// descripciones ya cacheadas del catálogo. Una sola llamada de texto (sin imágenes)
+// para todo el lote, en vez de re-enviar cada foto en cada búsqueda.
+async function rankByDescription(searchedDescription: string, pets: Pet[]): Promise<Match[]> {
   if (pets.length === 0) return [];
 
-  // Gemini necesita los bytes de cada foto (no acepta URLs remotas como Groq)
-  const imagenes = await Promise.all(pets.map((pet) => fetchImageAsBase64(pet.image)));
-
-  const parts: object[] = [
-    {
-      text: `Mascota buscada:\n"${description}"\n\nOrdena las siguientes fotos de mascotas por similitud visual con la descripción anterior. Considera color del pelaje, marcas, tamaño y características únicas.`,
-    },
-  ];
-
-  pets.forEach((pet, i) => {
-    const img = imagenes[i];
-    if (!img) return; // foto no descargable, se omite de la comparación
-    parts.push({ inline_data: { mime_type: img.mimeType, data: img.data } });
-    parts.push({ text: `Foto: ID=${pet.id}, Nombre="${pet.name}"` });
-  });
-
-  parts.push({
-    text: `Responde ÚNICAMENTE con JSON válido sin bloques de código:
-[{"id": <número>, "similitud": <0-100>, "razon": "<razón breve en español>"}]
-Incluye todas las mascotas.`,
-  });
+  const catalogText = pets
+    .map((p) => `ID=${p.id} | Nombre="${p.name}" | Descripción: ${p.visual_description}`)
+    .join('\n');
 
   const response = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`,
@@ -141,7 +142,11 @@ Incluye todas las mascotas.`,
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        contents: [{ parts }],
+        contents: [{
+          parts: [{
+            text: `Mascota buscada:\n"${searchedDescription}"\n\nCatálogo de mascotas candidatas:\n${catalogText}\n\nOrdena las mascotas candidatas por similitud visual con la mascota buscada, considerando color del pelaje, marcas, tamaño y características únicas descritas en el texto.\n\nResponde ÚNICAMENTE con JSON válido sin bloques de código:\n[{"id": <número>, "similitud": <0-100>, "razon": "<razón breve en español>"}]\nIncluye todas las mascotas candidatas.`,
+          }],
+        }],
         generationConfig: { thinkingConfig: { thinkingBudget: 0 } },
       }),
     }
@@ -179,12 +184,17 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  await trackAiUsage('gemini_search');
+
   try {
     const { imageBase64 } = await req.json();
     if (!imageBase64) return NextResponse.json({ error: 'No image provided' }, { status: 400 });
 
-    // 1. Analizar la foto subida
-    const analysis = await analyzeLostPet(imageBase64);
+    // 1. Analizar la foto subida (1 llamada a Gemini con imagen)
+    const match = imageBase64.match(/^data:(.+?);base64,(.+)$/);
+    const mimeType = match?.[1] ?? 'image/jpeg';
+    const data = match?.[2] ?? imageBase64;
+    const analysis = await analyzePetImage(data, mimeType);
     console.log('Analysis:', analysis);
 
     if (!analysis.tipo && !analysis.raza) {
@@ -202,7 +212,7 @@ export async function POST(req: NextRequest) {
 
     let query = supabase
       .from('mascotas')
-      .select('id, name, type, breed, image, location')
+      .select('id, name, type, breed, image, location, visual_description')
       .eq('available', true)
       .not('image', 'is', null);
 
@@ -217,29 +227,32 @@ export async function POST(req: NextRequest) {
     }
 
     // 3. Filtrar por raza usando coincidencia de palabras clave
-    let breedMatches = allPets.filter((pet) => {
+    const breedMatches = allPets.filter((pet) => {
       const petBreed = pet.breed?.toLowerCase() ?? '';
       return razaKeywords.some((kw) => petBreed.includes(kw));
     });
 
     // Si no hay coincidencias por raza, usar todos los del mismo tipo.
-    // Tope de mascotas a comparar visualmente (Gemini soporta bastantes imágenes por
-    // request, pero se acota igual para no descargar/comparar catálogos enormes).
+    // Tope de mascotas a comparar visualmente para no descargar/comparar catálogos enormes.
     const MAX_COMPARE = 18;
     const petsToCompare = (breedMatches.length > 0 ? breedMatches : allPets).slice(0, MAX_COMPARE);
     console.log(`Comparing against ${petsToCompare.length} pets (breed match: ${breedMatches.length})`);
 
-    // 4. Ranking visual en lotes de 6
-    const BATCH = 6;
-    const allMatches: Match[] = [];
-    for (let i = 0; i < petsToCompare.length; i += BATCH) {
-      const batch = petsToCompare.slice(i, i + BATCH);
-      const ranked = await rankByVisualSimilarity(analysis.descripcion, batch);
-      allMatches.push(...ranked);
-    }
+    // 4. Asegurar que cada mascota candidata tenga descripción visual cacheada
+    //    (solo genera+guarda la que falte; las ya cacheadas no vuelven a costar nada).
+    const withDescriptions = (
+      await Promise.all(
+        petsToCompare.map(async (pet) => {
+          const description = await getOrCreateVisualDescription(pet);
+          return description ? { ...pet, visual_description: description } : null;
+        })
+      )
+    ).filter((p): p is Pet & { visual_description: string } => p !== null);
 
-    // 5. Ordenar y devolver top 6
-    const sorted = allMatches.sort((a, b) => b.similitud - a.similitud).slice(0, 6);
+    // 5. Ranking visual por texto (1 sola llamada a Gemini, sin imágenes de catálogo)
+    const sorted = (await rankByDescription(analysis.descripcion, withDescriptions))
+      .sort((a, b) => b.similitud - a.similitud)
+      .slice(0, 6);
 
     return NextResponse.json({ matches: sorted, analysis });
   } catch (err) {

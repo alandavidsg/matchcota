@@ -25,9 +25,15 @@ export async function GET(req: NextRequest) {
   if (!apiKey) return NextResponse.json({ lugares: [] });
 
   try {
+    // Redondea a ~1.1km de grilla para que usuarios cercanos entre sí compartan
+    // la misma URL de Foursquare y reusen el caché de Next.js (el free tier bajó
+    // a 500 llamadas/mes). La distancia mostrada igual se calcula con lat/lng
+    // exactos del usuario más abajo, no se pierde precisión ahí.
+    const roundCoord = (n: number) => Math.round(n * 100) / 100;
+
     // 11134 = Veterinarian, 11135 = Animal Shelter
     const params = new URLSearchParams({
-      ll: `${lat},${lng}`,
+      ll: `${roundCoord(lat)},${roundCoord(lng)}`,
       categories: '11134,11135',
       radius: '15000',
       limit: '10',
@@ -39,6 +45,7 @@ export async function GET(req: NextRequest) {
         Authorization: apiKey,
         Accept: 'application/json',
       },
+      next: { revalidate: 86400 }, // cache 24h por celda de grilla
       signal: AbortSignal.timeout(10000),
     });
 
