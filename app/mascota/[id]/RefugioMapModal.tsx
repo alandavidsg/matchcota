@@ -54,7 +54,7 @@ export default function RefugioMapModal({ petName, petLocation, lat, lng, tipo =
     let cancelado = false;
     (async () => {
       try {
-        const res = await fetch(`/api/cercanos?lat=${lat}&lng=${lng}&tipo=${tipo}&radius=200000`);
+        const res = await fetch(`/api/cercanos?lat=${lat}&lng=${lng}&tipo=${tipo}&radius=100000`);
         const data = await res.json();
         const masCercano: Lugar | undefined = (data.lugares ?? [])[0];
         if (!cancelado) setLugar(masCercano ?? null);
