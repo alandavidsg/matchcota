@@ -12,6 +12,9 @@ function haversine(lat1: number, lng1: number, lat2: number, lng2: number): numb
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
+// 11134 = Veterinarian, 11135 = Animal Shelter
+const CATEGORIA = { veterinaria: '11134', refugio: '11135' } as const;
+
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const lat = parseFloat(searchParams.get('lat') ?? '');
@@ -20,6 +23,19 @@ export async function GET(req: NextRequest) {
   if (isNaN(lat) || isNaN(lng)) {
     return NextResponse.json({ error: 'lat y lng requeridos' }, { status: 400 });
   }
+
+  // Radio configurable: /reportar usa el default (15km, lugares "aquí cerca");
+  // la ficha de mascota pide un radio amplio para SIEMPRE mostrar el más cercano
+  // real aunque quede en otra comuna. Se acota a un máximo razonable.
+  const radiusParam = parseInt(searchParams.get('radius') ?? '', 10);
+  const radius = Math.min(Math.max(isNaN(radiusParam) ? 15000 : radiusParam, 1000), 300000);
+
+  // tipo opcional: filtra por una sola categoría. Sin tipo, busca ambas (default).
+  const tipoParam = searchParams.get('tipo');
+  const categories =
+    tipoParam === 'refugio' || tipoParam === 'veterinaria'
+      ? CATEGORIA[tipoParam]
+      : `${CATEGORIA.veterinaria},${CATEGORIA.refugio}`;
 
   const apiKey = process.env.FOURSQUARE_API_KEY;
   if (!apiKey) return NextResponse.json({ lugares: [] });
@@ -31,11 +47,10 @@ export async function GET(req: NextRequest) {
     // exactos del usuario más abajo, no se pierde precisión ahí.
     const roundCoord = (n: number) => Math.round(n * 100) / 100;
 
-    // 11134 = Veterinarian, 11135 = Animal Shelter
     const params = new URLSearchParams({
       ll: `${roundCoord(lat)},${roundCoord(lng)}`,
-      categories: '11134,11135',
-      radius: '15000',
+      categories,
+      radius: String(radius),
       limit: '10',
       fields: 'fsq_id,name,geocodes,categories,location,tel,distance',
     });
