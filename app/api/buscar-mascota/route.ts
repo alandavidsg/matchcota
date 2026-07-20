@@ -98,7 +98,10 @@ async function analyzePetImage(data: string, mimeType: string): Promise<Analysis
     }
   );
 
-  if (!response.ok) return { tipo: '', raza: '', color: '', descripcion: '' };
+  if (!response.ok) {
+    console.error('Gemini analyzePetImage error:', response.status, await response.text());
+    return { tipo: '', raza: '', color: '', descripcion: '' };
+  }
 
   const result = await response.json();
   const text: string = result.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
@@ -107,6 +110,7 @@ async function analyzePetImage(data: string, mimeType: string): Promise<Analysis
     const jsonMatch = clean.match(/\{[\s\S]*\}/);
     if (jsonMatch) return JSON.parse(jsonMatch[0]);
   } catch { /* empty */ }
+  console.error('Gemini analyzePetImage: no se pudo parsear JSON. Texto crudo:', text);
   return { tipo: '', raza: '', color: '', descripcion: '' };
 }
 
