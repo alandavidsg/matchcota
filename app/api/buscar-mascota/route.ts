@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { rateLimit } from '../../../lib/rateLimit';
 import { trackAiUsage } from '../../../lib/aiUsage';
@@ -242,24 +242,36 @@ export async function POST(req: NextRequest) {
     const petsToCompare = (breedMatches.length > 0 ? breedMatches : allPets).slice(0, MAX_COMPARE);
     console.log(`Comparing against ${petsToCompare.length} pets (breed match: ${breedMatches.length})`);
 
-    // 4. Asegurar que cada mascota candidata tenga descripción visual cacheada
-    //    (solo genera+guarda la que falte; las ya cacheadas no vuelven a costar nada).
-    // Secuencial, no Promise.all: si varias mascotas nunca fueron descritas (catálogo
-    // "frío"), disparar todas las llamadas a Groq en paralelo revienta el límite de
-    // 8.000 tokens/minuto de una sola vez aunque cada llamada individual sea liviana.
-    // En régimen normal (descripción ya cacheada) esto no agrega latencia real.
-    const withDescriptions: (Pet & { visual_description: string })[] = [];
-    for (const pet of petsToCompare) {
-      const description = await getOrCreateVisualDescription(pet);
-      if (description) withDescriptions.push({ ...pet, visual_description: description });
+    // 4. Separar lo ya cacheado (respuesta inmediata) de lo que falta describir.
+    //    Generar una descripción nueva puede chocar con el rate limit de Groq y
+    //    necesitar reintento con espera — hacerlo DENTRO de esta request (como
+    //    antes) podía sumar minutos si varias mascotas estaban sin cachear, y el
+    //    usuario se quedaba viendo "Buscando..." indefinidamente. Ahora solo se
+    //    usa lo que ya está cacheado para responder, y lo faltante se genera
+    //    en segundo plano con after() para que la próxima búsqueda ya lo tenga.
+    const yaDescriptas = petsToCompare.filter(
+      (p): p is Pet & { visual_description: string } => !!p.visual_description
+    );
+    const porDescribir = petsToCompare.filter((p) => !p.visual_description);
+
+    if (porDescribir.length > 0) {
+      after(async () => {
+        for (const pet of porDescribir) {
+          await getOrCreateVisualDescription(pet);
+        }
+      });
     }
 
     // 5. Ranking visual por texto (1 sola llamada, sin imágenes de catálogo)
-    const sorted = (await rankByDescription(analysis.descripcion, withDescriptions))
+    const sorted = (await rankByDescription(analysis.descripcion, yaDescriptas))
       .sort((a, b) => b.similitud - a.similitud)
       .slice(0, 6);
 
-    return NextResponse.json({ matches: sorted, analysis });
+    return NextResponse.json({
+      matches: sorted,
+      analysis,
+      calentando: porDescribir.length > 0 ? porDescribir.length : undefined,
+    });
   } catch (err) {
     console.error('buscar-mascota error:', err);
     return NextResponse.json({ error: 'Error interno' }, { status: 500 });
