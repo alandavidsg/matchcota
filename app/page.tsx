@@ -148,11 +148,11 @@ function DonationBanner() {
   const finalAmount = showCustom ? parseInt(custom.replace(/\D/g, '') || '0') : selected;
 
   return (
-    <div className="mt-16 rounded-3xl bg-[#1a1a2e] px-8 py-10 flex flex-col md:flex-row items-center gap-8">
+    <div className="mt-16 rounded-3xl bg-gray-100 border border-gray-200 px-8 py-10 flex flex-col md:flex-row items-center gap-8">
       <div className="flex-1 text-center md:text-left">
         <div className="flex mb-3"><PawPrint size={40} className="text-orange-400" /></div>
-        <h3 className="text-white text-2xl font-semibold mb-2">Ayúdanos a rescatar más mascotas</h3>
-        <p className="text-white/50 text-sm leading-relaxed">
+        <h3 className="text-[#1a1a2e] text-2xl font-semibold mb-2">Ayúdanos a rescatar más mascotas</h3>
+        <p className="text-gray-500 text-sm leading-relaxed">
           Con tu donación cubrimos veterinario, alimentación y transporte de mascotas rescatadas mientras encuentran un hogar.
         </p>
       </div>
@@ -165,7 +165,7 @@ function DonationBanner() {
               className={`py-2 rounded-full text-sm font-medium border transition ${
                 selected === a && !showCustom
                   ? 'bg-orange-500 text-white border-orange-500'
-                  : 'bg-white/10 text-white border-white/20 hover:bg-orange-500 hover:border-orange-500'
+                  : 'bg-white text-gray-500 border-gray-200 hover:border-orange-400 hover:text-orange-500'
               }`}
             >
               ${a.toLocaleString('es-CL')}
@@ -176,7 +176,7 @@ function DonationBanner() {
             className={`py-2 rounded-full text-sm font-medium border transition col-span-1 ${
               showCustom
                 ? 'bg-orange-500 text-white border-orange-500'
-                : 'bg-white/10 text-white border-white/20 hover:bg-orange-500 hover:border-orange-500'
+                : 'bg-white text-gray-500 border-gray-200 hover:border-orange-400 hover:text-orange-500'
             }`}
           >
             Otro
@@ -184,13 +184,13 @@ function DonationBanner() {
         </div>
         {showCustom && (
           <div className="relative w-full">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/50 text-sm">$</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">$</span>
             <input
               type="number"
               placeholder="Ingresa el monto"
               value={custom}
               onChange={(e) => setCustom(e.target.value)}
-              className="w-full pl-7 pr-3 py-2 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/30 text-sm focus:outline-none focus:border-orange-400"
+              className="w-full pl-7 pr-3 py-2 rounded-xl bg-white border border-gray-200 text-[#1a1a2e] placeholder-gray-300 text-sm focus:outline-none focus:border-orange-400"
               style={{ fontSize: '16px' }}
               autoFocus
             />
@@ -202,7 +202,7 @@ function DonationBanner() {
         >
           {finalAmount ? `Donar $${finalAmount.toLocaleString('es-CL')}` : 'Donar ahora'}
         </a>
-        <p className="text-white/30 text-xs">También puedes donar por transferencia</p>
+        <p className="text-gray-400 text-xs">También puedes donar por transferencia</p>
       </div>
     </div>
   );
