@@ -34,7 +34,7 @@ export default function FeedbackWidget() {
       const res = await fetch('/api/feedback', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mensaje, email, pagina: pathname }),
+        body: JSON.stringify({ mensaje, email, pagina: pathname === '/' ? '/home' : pathname }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => null);
