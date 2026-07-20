@@ -55,35 +55,54 @@ type Analysis = {
   descripcion: string;
 };
 
+// Llama a Groq y, si choca con el rate limit (429), espera lo que Groq pide
+// ("Please retry in X.Ys") y reintenta UNA vez. Cachear el catálogo de a poco
+// (Promise.all en paralelo) puede disparar varias llamadas seguidas que, sumadas,
+// superen las 8.000 tokens/minuto aunque cada una sea liviana; el retry evita que
+// esa mascota se quede afuera del resultado solo por mala suerte de timing.
+async function groqChatCompletion(body: object): Promise<Response> {
+  const call = () =>
+    fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${GROQ_API_KEY}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+
+  const first = await call();
+  if (first.status !== 429) return first;
+
+  const errText = await first.text();
+  const waitMatch = errText.match(/retry in ([\d.]+)s/i);
+  const waitMs = Math.min(waitMatch ? Math.ceil(parseFloat(waitMatch[1]) * 1000) : 10_000, 25_000);
+  await new Promise((resolve) => setTimeout(resolve, waitMs));
+  return call();
+}
+
 // Analiza una foto (URL remota o data URI, Groq acepta ambas) y extrae tipo, raza,
 // color y descripción. Se usa tanto para la foto de la mascota perdida como (una
 // sola vez por mascota, con caché en `visual_description`) para el catálogo.
 async function analyzePetImage(imageUrl: string): Promise<Analysis> {
-  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${GROQ_API_KEY}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      model: GROQ_MODEL,
-      reasoning_effort: 'none',
-      messages: [{
-        role: 'user',
-        content: [
-          { type: 'image_url', image_url: { url: imageUrl } },
-          {
-            type: 'text',
-            text: `Analiza esta mascota y responde ÚNICAMENTE con JSON válido sin texto adicional:
+  const response = await groqChatCompletion({
+    model: GROQ_MODEL,
+    reasoning_effort: 'none',
+    messages: [{
+      role: 'user',
+      content: [
+        { type: 'image_url', image_url: { url: imageUrl } },
+        {
+          type: 'text',
+          text: `Analiza esta mascota y responde ÚNICAMENTE con JSON válido sin texto adicional:
 {
   "tipo": "Perro" o "Gato" u otro tipo,
   "raza": "nombre exacto de la raza en español, ej: Husky Siberiano, Golden Retriever, Mestizo",
   "color": "colores principales del pelaje",
   "descripcion": "descripción visual detallada en 2-3 oraciones: raza, color, marcas distintivas, tamaño, características únicas"
 }`,
-          },
-        ],
-      }],
-      max_tokens: 400,
-      temperature: 0.1,
-    }),
+        },
+      ],
+    }],
+    max_tokens: 400,
+    temperature: 0.1,
   });
 
   if (!response.ok) {
@@ -126,19 +145,15 @@ async function rankByDescription(searchedDescription: string, pets: Pet[]): Prom
     .map((p) => `ID=${p.id} | Nombre="${p.name}" | Descripción: ${p.visual_description}`)
     .join('\n');
 
-  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${GROQ_API_KEY}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      model: GROQ_MODEL,
-      reasoning_effort: 'none',
-      messages: [{
-        role: 'user',
-        content: `Mascota buscada:\n"${searchedDescription}"\n\nCatálogo de mascotas candidatas:\n${catalogText}\n\nOrdena las mascotas candidatas por similitud visual con la mascota buscada, considerando color del pelaje, marcas, tamaño y características únicas descritas en el texto.\n\nResponde ÚNICAMENTE con JSON válido sin bloques de código:\n[{"id": <número>, "similitud": <0-100>, "razon": "<razón breve en español>"}]\nIncluye todas las mascotas candidatas.`,
-      }],
-      max_tokens: 800,
-      temperature: 0.1,
-    }),
+  const response = await groqChatCompletion({
+    model: GROQ_MODEL,
+    reasoning_effort: 'none',
+    messages: [{
+      role: 'user',
+      content: `Mascota buscada:\n"${searchedDescription}"\n\nCatálogo de mascotas candidatas:\n${catalogText}\n\nOrdena las mascotas candidatas por similitud visual con la mascota buscada, considerando color del pelaje, marcas, tamaño y características únicas descritas en el texto.\n\nResponde ÚNICAMENTE con JSON válido sin bloques de código:\n[{"id": <número>, "similitud": <0-100>, "razon": "<razón breve en español>"}]\nIncluye todas las mascotas candidatas.`,
+    }],
+    max_tokens: 800,
+    temperature: 0.1,
   });
 
   if (!response.ok) {
@@ -229,14 +244,15 @@ export async function POST(req: NextRequest) {
 
     // 4. Asegurar que cada mascota candidata tenga descripción visual cacheada
     //    (solo genera+guarda la que falte; las ya cacheadas no vuelven a costar nada).
-    const withDescriptions = (
-      await Promise.all(
-        petsToCompare.map(async (pet) => {
-          const description = await getOrCreateVisualDescription(pet);
-          return description ? { ...pet, visual_description: description } : null;
-        })
-      )
-    ).filter((p): p is Pet & { visual_description: string } => p !== null);
+    // Secuencial, no Promise.all: si varias mascotas nunca fueron descritas (catálogo
+    // "frío"), disparar todas las llamadas a Groq en paralelo revienta el límite de
+    // 8.000 tokens/minuto de una sola vez aunque cada llamada individual sea liviana.
+    // En régimen normal (descripción ya cacheada) esto no agrega latencia real.
+    const withDescriptions: (Pet & { visual_description: string })[] = [];
+    for (const pet of petsToCompare) {
+      const description = await getOrCreateVisualDescription(pet);
+      if (description) withDescriptions.push({ ...pet, visual_description: description });
+    }
 
     // 5. Ranking visual por texto (1 sola llamada, sin imágenes de catálogo)
     const sorted = (await rankByDescription(analysis.descripcion, withDescriptions))
