@@ -1,13 +1,13 @@
 import { Resend } from 'resend';
 import { supabaseAdmin } from './supabase-admin';
 
-type AiService = 'gemini_search' | 'groq_analyze';
+type AiService = 'groq_search' | 'groq_analyze';
 
 // Umbral diario a partir del cual se avisa por email (no bloquea nada).
 // Elegidos para avisar bastante antes de que el gasto diario se vuelva
 // significativo, dado el costo por llamada de cada servicio.
 const ALERT_THRESHOLDS: Record<AiService, number> = {
-  gemini_search: 80,
+  groq_search: 80,
   groq_analyze: 300,
 };
 

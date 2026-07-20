@@ -9,22 +9,8 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY!;
-const GEMINI_MODEL = 'gemini-3.5-flash';
-
-// Descarga una imagen por URL y la convierte a base64 para mandarla inline a Gemini
-// (a diferencia de Groq, la API de Gemini no puede descargar URLs remotas, necesita los bytes).
-async function fetchImageAsBase64(url: string): Promise<{ data: string; mimeType: string } | null> {
-  try {
-    const res = await fetch(url);
-    if (!res.ok) return null;
-    const mimeType = res.headers.get('content-type') || 'image/jpeg';
-    const buffer = await res.arrayBuffer();
-    return { data: Buffer.from(buffer).toString('base64'), mimeType };
-  } catch {
-    return null;
-  }
-}
+const GROQ_API_KEY = process.env.GROQ_API_KEY!;
+const GROQ_MODEL = 'qwen/qwen3.6-27b';
 
 type Pet = {
   id: number;
@@ -69,61 +55,61 @@ type Analysis = {
   descripcion: string;
 };
 
-// Analiza una foto (bytes ya descargados) y extrae tipo, raza, color y descripción.
-// Se usa tanto para la foto de la mascota perdida como (una sola vez por mascota,
-// con caché en `visual_description`) para el catálogo.
-async function analyzePetImage(data: string, mimeType: string): Promise<Analysis> {
-  const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{
-          parts: [
-            { inline_data: { mime_type: mimeType, data } },
-            {
-              text: `Analiza esta mascota y responde ÚNICAMENTE con JSON válido sin texto adicional:
+// Analiza una foto (URL remota o data URI, Groq acepta ambas) y extrae tipo, raza,
+// color y descripción. Se usa tanto para la foto de la mascota perdida como (una
+// sola vez por mascota, con caché en `visual_description`) para el catálogo.
+async function analyzePetImage(imageUrl: string): Promise<Analysis> {
+  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${GROQ_API_KEY}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: GROQ_MODEL,
+      reasoning_effort: 'none',
+      messages: [{
+        role: 'user',
+        content: [
+          { type: 'image_url', image_url: { url: imageUrl } },
+          {
+            type: 'text',
+            text: `Analiza esta mascota y responde ÚNICAMENTE con JSON válido sin texto adicional:
 {
   "tipo": "Perro" o "Gato" u otro tipo,
   "raza": "nombre exacto de la raza en español, ej: Husky Siberiano, Golden Retriever, Mestizo",
   "color": "colores principales del pelaje",
   "descripcion": "descripción visual detallada en 2-3 oraciones: raza, color, marcas distintivas, tamaño, características únicas"
 }`,
-            },
-          ],
-        }],
-        generationConfig: { thinkingConfig: { thinkingBudget: 0 } },
-      }),
-    }
-  );
+          },
+        ],
+      }],
+      max_tokens: 400,
+      temperature: 0.1,
+    }),
+  });
 
   if (!response.ok) {
-    console.error('Gemini analyzePetImage error:', response.status, await response.text());
+    console.error('Groq analyzePetImage error:', response.status, await response.text());
     return { tipo: '', raza: '', color: '', descripcion: '' };
   }
 
   const result = await response.json();
-  const text: string = result.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
+  const text: string = result.choices?.[0]?.message?.content ?? '';
   try {
     const clean = text.replace(/```json\n?|\n?```/g, '').trim();
     const jsonMatch = clean.match(/\{[\s\S]*\}/);
     if (jsonMatch) return JSON.parse(jsonMatch[0]);
   } catch { /* empty */ }
-  console.error('Gemini analyzePetImage: no se pudo parsear JSON. Texto crudo:', text);
+  console.error('Groq analyzePetImage: no se pudo parsear JSON. Texto crudo:', text);
   return { tipo: '', raza: '', color: '', descripcion: '' };
 }
 
 // Genera y cachea la descripción visual de una mascota del catálogo (solo la primera
 // vez que aparece en una búsqueda; de ahí en adelante se reusa desde la BD, sin
-// volver a descargar la foto ni a llamar a Gemini por ella).
+// volver a llamar a la IA por ella). Groq acepta la URL pública de Supabase Storage
+// directo, no hace falta descargar los bytes como con Gemini.
 async function getOrCreateVisualDescription(pet: Pet): Promise<string | null> {
   if (pet.visual_description) return pet.visual_description;
 
-  const img = await fetchImageAsBase64(pet.image);
-  if (!img) return null;
-
-  const analysis = await analyzePetImage(img.data, img.mimeType);
+  const analysis = await analyzePetImage(pet.image);
   if (!analysis.descripcion) return null;
 
   await supabaseAdmin.from('mascotas').update({ visual_description: analysis.descripcion }).eq('id', pet.id);
@@ -140,26 +126,28 @@ async function rankByDescription(searchedDescription: string, pets: Pet[]): Prom
     .map((p) => `ID=${p.id} | Nombre="${p.name}" | Descripción: ${p.visual_description}`)
     .join('\n');
 
-  const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{
-          parts: [{
-            text: `Mascota buscada:\n"${searchedDescription}"\n\nCatálogo de mascotas candidatas:\n${catalogText}\n\nOrdena las mascotas candidatas por similitud visual con la mascota buscada, considerando color del pelaje, marcas, tamaño y características únicas descritas en el texto.\n\nResponde ÚNICAMENTE con JSON válido sin bloques de código:\n[{"id": <número>, "similitud": <0-100>, "razon": "<razón breve en español>"}]\nIncluye todas las mascotas candidatas.`,
-          }],
-        }],
-        generationConfig: { thinkingConfig: { thinkingBudget: 0 } },
-      }),
-    }
-  );
+  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${GROQ_API_KEY}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: GROQ_MODEL,
+      reasoning_effort: 'none',
+      messages: [{
+        role: 'user',
+        content: `Mascota buscada:\n"${searchedDescription}"\n\nCatálogo de mascotas candidatas:\n${catalogText}\n\nOrdena las mascotas candidatas por similitud visual con la mascota buscada, considerando color del pelaje, marcas, tamaño y características únicas descritas en el texto.\n\nResponde ÚNICAMENTE con JSON válido sin bloques de código:\n[{"id": <número>, "similitud": <0-100>, "razon": "<razón breve en español>"}]\nIncluye todas las mascotas candidatas.`,
+      }],
+      max_tokens: 800,
+      temperature: 0.1,
+    }),
+  });
 
-  if (!response.ok) return [];
+  if (!response.ok) {
+    console.error('Groq rankByDescription error:', response.status, await response.text());
+    return [];
+  }
 
   const result = await response.json();
-  const text: string = result.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
+  const text: string = result.choices?.[0]?.message?.content ?? '';
 
   try {
     const clean = text.replace(/```json\n?|\n?```/g, '').trim();
@@ -188,17 +176,14 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  await trackAiUsage('gemini_search');
+  await trackAiUsage('groq_search');
 
   try {
     const { imageBase64 } = await req.json();
     if (!imageBase64) return NextResponse.json({ error: 'No image provided' }, { status: 400 });
 
-    // 1. Analizar la foto subida (1 llamada a Gemini con imagen)
-    const match = imageBase64.match(/^data:(.+?);base64,(.+)$/);
-    const mimeType = match?.[1] ?? 'image/jpeg';
-    const data = match?.[2] ?? imageBase64;
-    const analysis = await analyzePetImage(data, mimeType);
+    // 1. Analizar la foto subida (1 llamada con imagen)
+    const analysis = await analyzePetImage(imageBase64);
     console.log('Analysis:', analysis);
 
     if (!analysis.tipo && !analysis.raza) {
@@ -253,7 +238,7 @@ export async function POST(req: NextRequest) {
       )
     ).filter((p): p is Pet & { visual_description: string } => p !== null);
 
-    // 5. Ranking visual por texto (1 sola llamada a Gemini, sin imágenes de catálogo)
+    // 5. Ranking visual por texto (1 sola llamada, sin imágenes de catálogo)
     const sorted = (await rankByDescription(analysis.descripcion, withDescriptions))
       .sort((a, b) => b.similitud - a.similitud)
       .slice(0, 6);
