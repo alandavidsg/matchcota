@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { Camera, PawPrint, Map, Search, BookOpen, Heart } from 'lucide-react';
 import { ThemeProvider, ThemeToggle } from './components/ThemeProvider';
+import FeedbackWidget from './components/FeedbackWidget';
 
 export const metadata: Metadata = {
   title: 'Matchcota - Adopta una mascota',
@@ -112,6 +113,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <span className="text-[10px]">FAQ</span>
             </a>
           </nav>
+
+          <FeedbackWidget />
         </ThemeProvider>
       </body>
     </html>
