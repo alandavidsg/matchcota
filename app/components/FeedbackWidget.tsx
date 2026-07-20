@@ -62,71 +62,81 @@ export default function FeedbackWidget() {
 
       {open && (
         <div
-          className="fixed inset-0 z-[90] bg-black/60 flex items-end md:items-center justify-center p-0 md:p-4"
-          onClick={(e) => { if (e.target === e.currentTarget) cerrar(); }}
+          className="fixed inset-0 z-[90] bg-black/60"
+          onClick={cerrar}
         >
-          <div className="bg-white rounded-t-3xl md:rounded-3xl w-full max-w-md overflow-hidden">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-              <div className="flex items-center gap-2 text-[#1a1a2e]">
-                <Lightbulb size={18} className="text-orange-500" />
-                <span className="font-semibold text-sm">Ayúdanos a mejorar</span>
-              </div>
-              <button
-                type="button"
-                onClick={cerrar}
-                aria-label="Cerrar"
-                className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 transition"
-              >
-                <X size={16} />
-              </button>
-            </div>
-
-            <div className="p-5">
-              {sent ? (
-                <div className="text-center py-6">
-                  <div className="flex justify-center mb-3"><CheckCircle size={48} className="text-green-500" /></div>
-                  <h3 className="text-base font-semibold text-[#1a1a2e] mb-1">¡Gracias por tu idea!</h3>
-                  <p className="text-gray-400 text-sm">La vamos a revisar con cariño.</p>
+          {/* Anclado a 64px del fondo (mismo alto que la barra inferior móvil, pb-16
+              en el body) en vez de "pegar" al borde de la pantalla con items-end: en
+              móvil el 100vh del navegador no siempre coincide con el alto visible real
+              y el modal terminaba viéndose flotando a media pantalla. En desktop no hay
+              barra inferior, así que se centra normal. */}
+          <div
+            className="fixed left-0 right-0 bottom-16 md:bottom-auto md:top-1/2 md:left-1/2 md:right-auto md:-translate-x-1/2 md:-translate-y-1/2 flex justify-center px-3 md:px-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="bg-white rounded-3xl w-full max-w-md overflow-hidden">
+              <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+                <div className="flex items-center gap-2 text-[#1a1a2e]">
+                  <Lightbulb size={18} className="text-orange-500" />
+                  <span className="font-semibold text-sm">Ayúdanos a mejorar</span>
                 </div>
-              ) : (
-                <form onSubmit={enviar} className="flex flex-col gap-4">
-                  <div>
-                    <label className="text-xs text-gray-400 block mb-1">¿Qué podríamos mejorar?</label>
-                    <textarea
-                      rows={4}
-                      required
-                      minLength={5}
-                      maxLength={2000}
-                      placeholder="Cuéntanos una idea, algo que no funcionó bien, o lo que se te ocurra..."
-                      value={mensaje}
-                      onChange={(e) => setMensaje(e.target.value)}
-                      className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-orange-400 resize-none text-sm"
-                      style={{ fontSize: '16px' }}
-                      autoFocus
-                    />
+                <button
+                  type="button"
+                  onClick={cerrar}
+                  aria-label="Cerrar"
+                  className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 transition"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+
+              <div className="p-5">
+                {sent ? (
+                  <div className="text-center py-6">
+                    <div className="flex justify-center mb-3"><CheckCircle size={48} className="text-green-500" /></div>
+                    <h3 className="text-base font-semibold text-[#1a1a2e] mb-1">¡Gracias por tu idea!</h3>
+                    <p className="text-gray-400 text-sm">La vamos a revisar con cariño.</p>
                   </div>
-                  <div>
-                    <label className="text-xs text-gray-400 block mb-1">Tu email (opcional, por si quieres que te respondamos)</label>
-                    <input
-                      type="email"
-                      placeholder="tu@email.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="w-full text-sm px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-orange-400"
-                      style={{ fontSize: '16px' }}
-                    />
-                  </div>
-                  {errorMsg && <p className="text-sm text-red-500 text-center">{errorMsg}</p>}
-                  <button
-                    type="submit"
-                    disabled={sending}
-                    className="w-full bg-orange-500 hover:bg-orange-600 text-white rounded-2xl font-semibold transition disabled:opacity-60"
-                    style={{ minHeight: '48px', fontSize: '15px' }}
-                  >
-                    {sending ? 'Enviando...' : 'Enviar sugerencia'}
-                  </button>
-                </form>
-              )}
+                ) : (
+                  <form onSubmit={enviar} className="flex flex-col gap-4">
+                    <div>
+                      <label className="text-xs text-gray-400 block mb-1">¿Qué podríamos mejorar?</label>
+                      <textarea
+                        rows={4}
+                        required
+                        minLength={5}
+                        maxLength={2000}
+                        placeholder="Cuéntanos una idea, algo que no funcionó bien, o lo que se te ocurra..."
+                        value={mensaje}
+                        onChange={(e) => setMensaje(e.target.value)}
+                        className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-orange-400 resize-none text-sm"
+                        style={{ fontSize: '16px' }}
+                        autoFocus
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs text-gray-400 block mb-1">Tu email (opcional, por si quieres que te respondamos)</label>
+                      <input
+                        type="email"
+                        placeholder="tu@email.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="w-full text-sm px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-orange-400"
+                        style={{ fontSize: '16px' }}
+                      />
+                    </div>
+                    {errorMsg && <p className="text-sm text-red-500 text-center">{errorMsg}</p>}
+                    <button
+                      type="submit"
+                      disabled={sending}
+                      className="w-full bg-orange-500 hover:bg-orange-600 text-white rounded-2xl font-semibold transition disabled:opacity-60"
+                      style={{ minHeight: '48px', fontSize: '15px' }}
+                    >
+                      {sending ? 'Enviando...' : 'Enviar sugerencia'}
+                    </button>
+                  </form>
+                )}
+              </div>
             </div>
           </div>
         </div>
