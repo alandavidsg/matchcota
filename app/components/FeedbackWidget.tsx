@@ -53,7 +53,7 @@ export default function FeedbackWidget() {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="fixed z-40 bottom-20 right-4 md:bottom-6 md:right-6 flex items-center gap-2 bg-[#1a1a2e] hover:bg-[#2a2a4a] text-white pl-3 pr-4 py-3 rounded-full shadow-lg transition"
+        className="fixed z-[1100] bottom-20 right-4 md:bottom-6 md:right-6 flex items-center gap-2 bg-[#1a1a2e] hover:bg-[#2a2a4a] text-white pl-3 pr-4 py-3 rounded-full shadow-lg transition"
         aria-label="Ayúdanos a mejorar"
       >
         <Lightbulb size={18} className="text-orange-400" />
@@ -62,7 +62,7 @@ export default function FeedbackWidget() {
 
       {open && (
         <div
-          className="fixed inset-0 z-[90] bg-black/60"
+          className="fixed inset-0 z-[1100] bg-black/60"
           onClick={cerrar}
         >
           {/* Anclado a 64px del fondo (mismo alto que la barra inferior móvil, pb-16
