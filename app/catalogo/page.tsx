@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { supabase } from '../../lib/supabase';
-import { MapPin, Heart, AlertTriangle, PawPrint, Eye, Home } from 'lucide-react';
+import { MapPin, Heart, AlertTriangle, PawPrint, Eye, Home, HeartPulse } from 'lucide-react';
 
 type Pet = {
   id: number;
@@ -15,6 +15,7 @@ type Pet = {
   image: string;
   urgente: boolean;
   hogar_temporal: boolean;
+  necesita_operacion: boolean;
   lat: number | null;
   lng: number | null;
   avistamientos_count: number | null;
@@ -91,6 +92,8 @@ function CatalogoContent() {
     ? pets.filter((p) => p.urgente)
     : activeFilter === 'hogar_temporal'
     ? pets.filter((p) => p.hogar_temporal)
+    : activeFilter === 'necesita_operacion'
+    ? pets.filter((p) => p.necesita_operacion)
     : activeFilter === 'Animal'
     ? pets.filter((p) => !['perro', 'gato'].includes(p.type?.toLowerCase()))
     : pets.filter((p) => p.type?.toLowerCase() === activeFilter.toLowerCase());
@@ -112,6 +115,7 @@ function CatalogoContent() {
     Conejo: 'Conejos en adopción',
     urgente: 'Adopción urgente',
     hogar_temporal: 'Buscan hogar temporal',
+    necesita_operacion: 'Necesitan operación',
     Animal: 'Animales exóticos en adopción',
     favoritos: 'Mis favoritos',
   };
@@ -173,6 +177,18 @@ function CatalogoContent() {
             <Home size={14} />
             Hogar temporal
           </button>
+
+          <button
+            onClick={() => setActiveFilter(activeFilter === 'necesita_operacion' ? 'todos' : 'necesita_operacion')}
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm border transition font-medium ${
+              activeFilter === 'necesita_operacion'
+                ? 'bg-violet-500 text-white border-violet-500'
+                : 'bg-white text-gray-500 border-gray-200 hover:border-violet-400 hover:text-violet-500'
+            }`}
+          >
+            <HeartPulse size={14} />
+            Necesita operación
+          </button>
         </div>
 
         {loading ? (
@@ -195,6 +211,11 @@ function CatalogoContent() {
                     {pet.hogar_temporal && (
                       <span className={`absolute ${pet.urgente ? 'top-9' : 'top-2'} left-2 bg-sky-500 text-white text-[10px] font-bold px-2 py-1 rounded-full flex items-center gap-1`}>
                         <Home size={10} /> HOGAR TEMPORAL
+                      </span>
+                    )}
+                    {pet.necesita_operacion && (
+                      <span className={`absolute ${[pet.urgente, pet.hogar_temporal].filter(Boolean).length === 2 ? 'top-16' : [pet.urgente, pet.hogar_temporal].some(Boolean) ? 'top-9' : 'top-2'} left-2 bg-violet-500 text-white text-[10px] font-bold px-2 py-1 rounded-full flex items-center gap-1`}>
+                        <HeartPulse size={10} /> NECESITA OPERACIÓN
                       </span>
                     )}
                     {(pet.avistamientos_count ?? 1) > 1 && (

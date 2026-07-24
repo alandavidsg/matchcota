@@ -30,6 +30,7 @@ type Pet = {
   description: string;
   urgente: boolean;
   hogar_temporal: boolean;
+  necesita_operacion: boolean;
   lat: number | null;
   lng: number | null;
   refugio_id: string | null;
@@ -292,6 +293,11 @@ export default function PetDetailClient({ id }: { id: string }) {
                 {pet.hogar_temporal && (
                   <span className={`absolute ${pet.urgente ? 'top-14' : 'top-4'} left-4 bg-sky-500 text-white text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1 z-10`}>
                     <Home size={12} /> Busca hogar temporal
+                  </span>
+                )}
+                {pet.necesita_operacion && (
+                  <span className={`absolute ${[pet.urgente, pet.hogar_temporal].filter(Boolean).length === 2 ? 'top-24' : [pet.urgente, pet.hogar_temporal].some(Boolean) ? 'top-14' : 'top-4'} left-4 bg-violet-500 text-white text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1 z-10`}>
+                    <HeartPulse size={12} /> Necesita operación
                   </span>
                 )}
 

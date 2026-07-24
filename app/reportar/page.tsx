@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '../../lib/supabase';
-import { ArrowLeft, Camera, Home, MapPin, Phone, CheckCircle, Sparkles, PenLine, AlertTriangle, Eye, Crop as CropIcon, Zap } from 'lucide-react';
+import { ArrowLeft, Camera, Home, MapPin, Phone, CheckCircle, Sparkles, PenLine, AlertTriangle, Eye, Crop as CropIcon, Zap, HeartPulse } from 'lucide-react';
 import exifr from 'exifr';
 import ReactCrop, { type Crop, type PixelCrop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
@@ -33,6 +33,9 @@ export default function ReportarPage() {
 
   // Hogar temporal: hogar de tránsito mientras aparece adoptante definitivo
   const [hogarTemporal, setHogarTemporal] = useState(false);
+
+  // Necesita operación: mascota herida que requiere intervención veterinaria
+  const [necesitaOperacion, setNecesitaOperacion] = useState(false);
 
   // Detección de duplicados
   type DupMatch = { id: number; name: string; image: string; location: string; similitud: number; razon: string };
@@ -312,6 +315,7 @@ export default function ReportarPage() {
       available: true,
       urgente: esUrgenteElegible(adoptForm.edad) && urgente,
       hogar_temporal: hogarTemporal,
+      necesita_operacion: necesitaOperacion,
       lat: coords?.lat ?? null,
       lng: coords?.lng ?? null,
     }).select('id').single();
@@ -351,6 +355,7 @@ export default function ReportarPage() {
       available: true,
       urgente: esUrgenteElegible(form.edad) && urgente,
       hogar_temporal: hogarTemporal,
+      necesita_operacion: necesitaOperacion,
       avistamientos_count: 1,
     }).select('id').single();
 
@@ -703,6 +708,17 @@ export default function ReportarPage() {
               </label>
             )}
             {hasPhotos && (
+              <label className="flex items-start gap-3 bg-violet-50 border border-violet-100 rounded-2xl p-4 mb-3 cursor-pointer touch-manipulation">
+                <input type="checkbox" checked={necesitaOperacion} onChange={(e) => setNecesitaOperacion(e.target.checked)} className="mt-0.5 w-4 h-4 accent-violet-500 shrink-0" />
+                <span>
+                  <span className="flex items-center gap-1.5 text-sm font-semibold text-violet-600"><HeartPulse size={14} /> Necesita operación</span>
+                  <span className="block text-xs text-violet-400 mt-1">
+                    Está herida o requiere una intervención veterinaria — se destacará para ayudar a conseguir apoyo.
+                  </span>
+                </span>
+              </label>
+            )}
+            {hasPhotos && (
               <button onClick={handleAdoptSubmit} disabled={submitting} className="w-full bg-orange-500 text-white py-4 rounded-xl font-medium hover:bg-orange-600 transition disabled:opacity-60 touch-manipulation" style={{ fontSize: '16px' }}>
                 {submitting ? 'Publicando...' : 'Publicar en catálogo'}
               </button>
@@ -873,6 +889,17 @@ export default function ReportarPage() {
                   <span className="flex items-center gap-1.5 text-sm font-semibold text-sky-600"><Home size={14} /> Necesita hogar temporal</span>
                   <span className="block text-xs text-sky-400 mt-1">
                     Se buscará un hogar de tránsito que lo cuide mientras aparece su familia definitiva.
+                  </span>
+                </span>
+              </label>
+            )}
+            {hasPhotos && !analyzing && (
+              <label className="flex items-start gap-3 bg-violet-50 border border-violet-100 rounded-2xl p-4 mb-3 cursor-pointer touch-manipulation">
+                <input type="checkbox" checked={necesitaOperacion} onChange={(e) => setNecesitaOperacion(e.target.checked)} className="mt-0.5 w-4 h-4 accent-violet-500 shrink-0" />
+                <span>
+                  <span className="flex items-center gap-1.5 text-sm font-semibold text-violet-600"><HeartPulse size={14} /> Necesita operación</span>
+                  <span className="block text-xs text-violet-400 mt-1">
+                    Está herida o requiere una intervención veterinaria — se destacará para ayudar a conseguir apoyo.
                   </span>
                 </span>
               </label>
