@@ -6,6 +6,7 @@ import { supabase } from '../../lib/supabase';
 import { ArrowLeft, Camera, Home, MapPin, Phone, CheckCircle, Sparkles, PenLine, AlertTriangle, Eye, Zap, HeartPulse } from 'lucide-react';
 import exifr from 'exifr';
 import PhotoCropModal from '../components/PhotoCropModal';
+import Toast from '../components/Toast';
 
 export default function ReportarPage() {
   const router = useRouter();
@@ -22,6 +23,8 @@ export default function ReportarPage() {
   const [cropSrc, setCropSrc] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
+  const [toast, setToast] = useState<{ mensaje: string; detalle: string } | null>(null);
 
   // Al publicar, el aviso de éxito reemplaza al formulario pero el navegador
   // conserva la posición del scroll: quien llenó un formulario largo y publicó
@@ -301,6 +304,10 @@ export default function ReportarPage() {
 
     if (error) { alert('Error guardando mascota. Intenta de nuevo.'); setSubmitting(false); return; }
     if (nueva?.id) asignarRefugioCercano(nueva.id);
+    setToast({
+      mensaje: `${adoptForm.nombre || adoptForm.raza || adoptForm.tipo || 'Tu mascota'} se publicó en adopción`,
+      detalle: 'Ya está visible en el catálogo. Te avisaremos por correo si alguien la solicita.',
+    });
     setSubmitted(true);
     setTimeout(() => router.push(nueva?.id ? `/mascota/${nueva.id}` : '/'), 1500);
   };
@@ -359,6 +366,10 @@ export default function ReportarPage() {
 
     if (nueva?.id) asignarRefugioCercano(nueva.id);
     setShowDupModal(false);
+    setToast({
+      mensaje: `${form.raza || form.tipo || 'La mascota'} se publicó correctamente`,
+      detalle: 'Ya está visible en el catálogo para que puedan adoptarla.',
+    });
     setSubmitted(true);
     setTimeout(() => router.push(nueva?.id ? `/mascota/${nueva.id}` : '/'), 1500);
   };
@@ -387,6 +398,10 @@ export default function ReportarPage() {
       }),
     });
     setShowDupModal(false);
+    setToast({
+      mensaje: 'Avistamiento registrado',
+      detalle: 'Sumaste información a una mascota que ya estaba publicada.',
+    });
     setSubmitted(true);
     setTimeout(() => router.push(`/mascota/${mascotaId}`), 1500);
   };
@@ -414,6 +429,10 @@ export default function ReportarPage() {
 
   return (
     <main suppressHydrationWarning>
+      {toast && (
+        <Toast mensaje={toast.mensaje} detalle={toast.detalle} onClose={() => setToast(null)} />
+      )}
+
       {/* Modal de recorte de la foto principal */}
       {cropSrc && (
         <PhotoCropModal src={cropSrc} onCancel={() => setCropSrc(null)} onConfirm={confirmCrop} />

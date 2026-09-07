@@ -5,6 +5,7 @@ import { supabase } from '../../lib/supabase';
 import { PawPrint, Search, Megaphone, Camera, MapPin, Loader2, Lightbulb, Coins, CheckCircle } from 'lucide-react';
 import exifr from 'exifr';
 import PhotoCropModal from '../components/PhotoCropModal';
+import Toast from '../components/Toast';
 
 type Match = {
   id: number;
@@ -70,6 +71,7 @@ export default function PerdidosPage() {
 
   // Publicación recién creada, para mostrar la confirmación con enlace a la ficha.
   const [publicada, setPublicada] = useState<{ id: number | null; nombre: string } | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
 
   // ── LISTADO ──
   const [lostPets, setLostPets] = useState<LostPet[]>([]);
@@ -257,6 +259,7 @@ export default function PerdidosPage() {
       }).select('id').single();
       if (!error) {
         setPublicada({ id: nueva?.id ?? null, nombre: form.nombre || form.tipo || 'Tu mascota' });
+        setToast(`${form.nombre || form.tipo || 'Tu mascota'} se publicó correctamente`);
         // Limpiar el formulario: si no, al volver a la pestaña de reportar
         // quedaban cargados los datos de la publicación anterior y era fácil
         // publicarla dos veces sin querer.
@@ -279,6 +282,14 @@ export default function PerdidosPage() {
 
   return (
     <main className="min-h-screen bg-gray-50">
+      {toast && (
+        <Toast
+          mensaje={toast}
+          detalle="Ya aparece en el listado de mascotas perdidas."
+          onClose={() => setToast(null)}
+        />
+      )}
+
       {/* Editor de recorte: lo comparten la búsqueda y el reporte de pérdida */}
       {cropSrc && (
         <PhotoCropModal src={cropSrc} onCancel={cancelarRecorte} onConfirm={confirmarRecorte} />
