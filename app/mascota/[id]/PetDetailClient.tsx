@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { supabase } from '../../../lib/supabase';
 import { MapPin, ArrowLeft, AlertTriangle, CheckCircle, Eye, PawPrint, HouseHeart, HeartPulse, Link2, Check, Home } from 'lucide-react';
@@ -81,11 +81,26 @@ export default function PetDetailClient({ id }: { id: string }) {
   // Se lee con useSearchParams y no de window.location: al llegar acá por una
   // navegación del cliente desde /reportar, window.location todavía puede tener
   // la URL anterior cuando el componente monta, y el aviso se perdía.
+  //
+  // El valor se captura UNA vez al montar y queda guardado en estado. Es
+  // necesario porque abajo se limpia el parámetro de la URL, y replaceState se
+  // sincroniza con useSearchParams: si el aviso se derivara del parámetro en
+  // cada render, esa limpieza lo haría desaparecer de inmediato.
   const searchParams = useSearchParams();
-  const tipoPublicacion = searchParams.get('publicada');
-  const avisoPublicacion = tipoPublicacion ? AVISOS_PUBLICACION[tipoPublicacion] : null;
+  const pathname = usePathname();
+  const [avisoPublicacion] = useState(() => {
+    const tipo = searchParams.get('publicada');
+    return (tipo && AVISOS_PUBLICACION[tipo]) || null;
+  });
   const [avisoCerrado, setAvisoCerrado] = useState(false);
   const toast = avisoCerrado ? null : avisoPublicacion;
+
+  // Sacar el parámetro de la URL una vez leído: si no, el aviso reaparecería en
+  // cada recarga y viajaría pegado al enlace cuando alguien comparta la ficha.
+  useEffect(() => {
+    if (!avisoPublicacion) return;
+    window.history.replaceState(null, '', pathname);
+  }, [avisoPublicacion, pathname]);
 
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
