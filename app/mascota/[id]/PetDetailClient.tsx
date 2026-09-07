@@ -9,6 +9,26 @@ import { MapPin, ArrowLeft, AlertTriangle, CheckCircle, Eye, PawPrint, HouseHear
 // Leaflet no soporta SSR — cargar el modal del mapa solo en el cliente
 const RefugioMapModal = dynamic(() => import('./RefugioMapModal'), { ssr: false });
 
+import Toast from '../../components/Toast';
+
+// Confirmaciones que llegan desde /reportar por querystring. El aviso se muestra
+// acá y no en el formulario porque allá la redirección lo cortaba a los 1,5s,
+// antes de que alcanzara a leerse.
+const AVISOS_PUBLICACION: Record<string, { mensaje: string; detalle: string }> = {
+  adopcion: {
+    mensaje: 'Tu mascota se publicó en adopción',
+    detalle: 'Te avisaremos por correo si alguien la solicita.',
+  },
+  calle: {
+    mensaje: 'La mascota se publicó correctamente',
+    detalle: 'Ya está visible en el catálogo para que puedan adoptarla.',
+  },
+  avistamiento: {
+    mensaje: 'Avistamiento registrado',
+    detalle: 'Sumaste información a una mascota que ya estaba publicada.',
+  },
+};
+
 function WhatsAppIcon() {
   return (
     <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
@@ -58,6 +78,23 @@ export default function PetDetailClient({ id }: { id: string }) {
   const [lightbox, setLightbox] = useState(false);
   const touchStartX = useRef(0);
   const [submitted, setSubmitted] = useState(false);
+  // El aviso se resuelve al inicializar el estado, no dentro de un efecto: así
+  // no hay un render extra en cascada. Se lee de window y no con useSearchParams
+  // para no tener que envolver toda la ficha en un límite de Suspense por esto.
+  // En el servidor queda en null, pero ahí la ficha todavía muestra "Cargando",
+  // así que el HTML es el mismo en ambos lados y no hay desajuste de hidratación.
+  const [toast, setToast] = useState<{ mensaje: string; detalle: string } | null>(() => {
+    if (typeof window === 'undefined') return null;
+    const tipo = new URLSearchParams(window.location.search).get('publicada');
+    return (tipo && AVISOS_PUBLICACION[tipo]) || null;
+  });
+
+  // Sacar el parámetro de la URL: si no, el aviso reaparecería al recargar y
+  // viajaría pegado al enlace cuando la persona lo comparta.
+  useEffect(() => {
+    if (!toast) return;
+    window.history.replaceState({}, '', window.location.pathname);
+  }, [toast]);
 
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
@@ -156,6 +193,10 @@ export default function PetDetailClient({ id }: { id: string }) {
 
   return (
     <main className="min-h-screen bg-gray-50 pb-20">
+
+      {toast && (
+        <Toast mensaje={toast.mensaje} detalle={toast.detalle} onClose={() => setToast(null)} />
+      )}
 
       {/* Lightbox */}
       {lightbox && (
