@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import type { Metadata } from 'next';
 import { headers } from 'next/headers';
 import PetDetailClient from './PetDetailClient';
@@ -90,5 +91,11 @@ export default async function PetPage({ params }: Props) {
   // Opt into dynamic rendering — prevents Vercel from pre-rendering this page
   headers();
   const { id } = await params;
-  return <PetDetailClient id={id} />;
+  // PetDetailClient usa useSearchParams (para el aviso de "recién publicada"),
+  // que la documentación pide envolver en un límite de Suspense.
+  return (
+    <Suspense>
+      <PetDetailClient id={id} />
+    </Suspense>
+  );
 }

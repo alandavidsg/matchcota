@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { supabase } from '../../../lib/supabase';
 import { MapPin, ArrowLeft, AlertTriangle, CheckCircle, Eye, PawPrint, HouseHeart, HeartPulse, Link2, Check, Home } from 'lucide-react';
@@ -78,23 +78,14 @@ export default function PetDetailClient({ id }: { id: string }) {
   const [lightbox, setLightbox] = useState(false);
   const touchStartX = useRef(0);
   const [submitted, setSubmitted] = useState(false);
-  // El aviso se resuelve al inicializar el estado, no dentro de un efecto: así
-  // no hay un render extra en cascada. Se lee de window y no con useSearchParams
-  // para no tener que envolver toda la ficha en un límite de Suspense por esto.
-  // En el servidor queda en null, pero ahí la ficha todavía muestra "Cargando",
-  // así que el HTML es el mismo en ambos lados y no hay desajuste de hidratación.
-  const [toast, setToast] = useState<{ mensaje: string; detalle: string } | null>(() => {
-    if (typeof window === 'undefined') return null;
-    const tipo = new URLSearchParams(window.location.search).get('publicada');
-    return (tipo && AVISOS_PUBLICACION[tipo]) || null;
-  });
-
-  // Sacar el parámetro de la URL: si no, el aviso reaparecería al recargar y
-  // viajaría pegado al enlace cuando la persona lo comparta.
-  useEffect(() => {
-    if (!toast) return;
-    window.history.replaceState({}, '', window.location.pathname);
-  }, [toast]);
+  // Se lee con useSearchParams y no de window.location: al llegar acá por una
+  // navegación del cliente desde /reportar, window.location todavía puede tener
+  // la URL anterior cuando el componente monta, y el aviso se perdía.
+  const searchParams = useSearchParams();
+  const tipoPublicacion = searchParams.get('publicada');
+  const avisoPublicacion = tipoPublicacion ? AVISOS_PUBLICACION[tipoPublicacion] : null;
+  const [avisoCerrado, setAvisoCerrado] = useState(false);
+  const toast = avisoCerrado ? null : avisoPublicacion;
 
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
@@ -195,7 +186,7 @@ export default function PetDetailClient({ id }: { id: string }) {
     <main className="min-h-screen bg-gray-50 pb-20">
 
       {toast && (
-        <Toast mensaje={toast.mensaje} detalle={toast.detalle} onClose={() => setToast(null)} />
+        <Toast mensaje={toast.mensaje} detalle={toast.detalle} onClose={() => setAvisoCerrado(true)} />
       )}
 
       {/* Lightbox */}
