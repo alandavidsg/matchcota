@@ -1,7 +1,10 @@
 import { supabaseAdmin } from './supabase-admin';
 
 const GROQ_API_KEY = process.env.GROQ_API_KEY!;
-export const GROQ_MODEL = 'qwen/qwen3.8-27b';
+// Groq ya retiró tres modelos usados por este proyecto, y cada baja deja el
+// análisis de fotos caído hasta que se despliega un cambio. Con la variable de
+// entorno GROQ_MODEL se puede apuntar a otro modelo desde Vercel, sin deploy.
+export const GROQ_MODEL = process.env.GROQ_MODEL || 'qwen/qwen3.8-27b';
 
 export type Analysis = {
   tipo: string;

@@ -48,6 +48,9 @@ export default function ReportarPage() {
   const [showDupModal, setShowDupModal] = useState(false);
   const [checkingDups, setCheckingDups] = useState(false);
   const [notAnimalError, setNotAnimalError] = useState(false);
+  // La IA no respondió (modelo caído, cuota agotada, red). Distinto de que la
+  // foto no sea de un animal: acá la foto sirve y se puede seguir a mano.
+  const [analisisFallido, setAnalisisFallido] = useState(false);
   const [location, setLocation] = useState('Obteniendo ubicación...');
   const [locationReady, setLocationReady] = useState(false);
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
@@ -231,9 +234,16 @@ export default function ReportarPage() {
   const analyzePhoto = (imageBase64: string) => {
     setAnalyzing(true);
     setNotAnimalError(false);
+    setAnalisisFallido(false);
     fetch('/api/analyze', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ imageBase64 }) })
       .then((res) => res.json())
       .then((result) => {
+        if (result.error) {
+          // La foto queda donde está: el problema no es ella.
+          setAnalisisFallido(true);
+          setAnalyzing(false);
+          return;
+        }
         if (result.es_animal === false) {
           // No es un animal — limpiar foto y mostrar error
           setFiles([]);
@@ -250,7 +260,7 @@ export default function ReportarPage() {
         setVisualDescription(result.descripcion_visual || '');
         setAnalyzing(false);
       })
-      .catch(() => { setForm({ tipo: '', raza: '', edad: '', color: '', descripcion: '' }); setVisualDescription(''); setAnalyzing(false); });
+      .catch(() => { setAnalisisFallido(true); setAnalyzing(false); });
   };
 
   // Asigna la mascota recién publicada al refugio más cercano y lo notifica (no bloquea)
@@ -729,6 +739,16 @@ export default function ReportarPage() {
                 <div>
                   <p className="text-sm font-medium text-red-600">Foto no válida</p>
                   <p className="text-xs text-red-400 mt-0.5">Solo se permiten fotos de animales reales. Intenta con otra imagen.</p>
+                </div>
+              </div>
+            )}
+
+            {analisisFallido && (
+              <div className="flex items-center gap-3 bg-amber-50 border border-amber-100 rounded-2xl p-4 mb-4">
+                <AlertTriangle size={20} className="text-amber-500 shrink-0" />
+                <div>
+                  <p className="text-sm font-medium text-amber-700">No pudimos analizar la foto</p>
+                  <p className="text-xs text-amber-600 mt-0.5">Tu foto está bien: el problema es nuestro. Completa los datos a mano y publica igual.</p>
                 </div>
               </div>
             )}

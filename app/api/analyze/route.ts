@@ -3,15 +3,12 @@ import { rateLimit } from '../../../lib/rateLimit';
 import { trackAiUsage } from '../../../lib/aiUsage';
 import { GROQ_MODEL } from '../../../lib/petVision';
 
-const FALLBACK = {
-  tipo: '',
-  raza: '',
-  edad: '',
-  color: '',
-  descripcion: '',
-  descripcion_visual: '',
-  es_animal: false,
-};
+// Respuesta cuando la IA no se pudo consultar o no se entendió lo que devolvió.
+// Se distingue a propósito de `es_animal: false`: eso significa "miré la foto y
+// no hay un animal", y hace que el formulario descarte la imagen. Si el problema
+// es la API, descartarle la foto a la persona y decirle "Foto no válida" es
+// mentirle — ya pasó dos veces con bajas de modelo de Groq.
+const ERROR_IA = { error: 'analisis_fallido' as const };
 
 export async function POST(req: NextRequest) {
   const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown';
@@ -26,7 +23,7 @@ export async function POST(req: NextRequest) {
   const { imageBase64 } = await req.json();
 
   const apiKey = process.env.GROQ_API_KEY;
-  if (!apiKey) return NextResponse.json(FALLBACK);
+  if (!apiKey) return NextResponse.json(ERROR_IA);
 
   await trackAiUsage('groq_analyze');
 
@@ -75,7 +72,7 @@ export async function POST(req: NextRequest) {
     if (!response.ok) {
       const err = await response.text();
       console.error('Groq error:', response.status, err);
-      return NextResponse.json(FALLBACK);
+      return NextResponse.json(ERROR_IA);
     }
 
     const data = await response.json();
@@ -84,12 +81,12 @@ export async function POST(req: NextRequest) {
     console.log('Groq response:', text);
 
     const jsonMatch = text.replace(/```json\n?|\n?```/g, '').trim().match(/\{[\s\S]*\}/);
-    if (!jsonMatch) return NextResponse.json(FALLBACK);
+    if (!jsonMatch) return NextResponse.json(ERROR_IA);
 
     const result = JSON.parse(jsonMatch[0]);
     return NextResponse.json(result);
   } catch (err) {
     console.error('Analyze error:', err);
-    return NextResponse.json(FALLBACK);
+    return NextResponse.json(ERROR_IA);
   }
 }
