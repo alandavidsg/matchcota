@@ -1,7 +1,7 @@
 import { supabaseAdmin } from './supabase-admin';
 
 const GROQ_API_KEY = process.env.GROQ_API_KEY!;
-export const GROQ_MODEL = 'qwen/qwen3.6-27b';
+export const GROQ_MODEL = 'qwen/qwen3.8-27b';
 
 export type Analysis = {
   tipo: string;

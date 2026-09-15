@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { rateLimit } from '../../../lib/rateLimit';
 import { trackAiUsage } from '../../../lib/aiUsage';
+import { GROQ_MODEL } from '../../../lib/petVision';
 
 const FALLBACK = {
   tipo: '',
@@ -37,7 +38,7 @@ export async function POST(req: NextRequest) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'qwen/qwen3.6-27b',
+        model: GROQ_MODEL,
         reasoning_effort: 'none',
         messages: [
           {
