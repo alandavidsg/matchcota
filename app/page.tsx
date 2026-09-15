@@ -319,8 +319,11 @@ function FaqPreview() {
   );
 }
 
+type Stats = { reportadas: number; adoptadas: number; disponibles: number };
+
 export default function Home() {
   const [pets, setPets] = useState<Pet[]>([]);
+  const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -333,7 +336,32 @@ export default function Home() {
       setLoading(false);
     }
 
+    // Contadores del hero. Van aparte de las mascotas del catálogo porque
+    // incluyen también las que ya no están disponibles, y se piden con
+    // head: true: Supabase devuelve solo el total, sin traer ninguna fila.
+    async function fetchStats() {
+      const contar = (filtro?: { available: boolean }) => {
+        let q = supabase.from('mascotas').select('id', { count: 'exact', head: true });
+        if (filtro) q = q.eq('available', filtro.available);
+        return q;
+      };
+      const [total, adoptadas, disponibles] = await Promise.all([
+        contar(),
+        contar({ available: false }),
+        contar({ available: true }),
+      ]);
+      // Si alguna consulta falla se deja el hero sin números en vez de
+      // mostrar ceros, que se leerían como datos reales.
+      if (total.error || adoptadas.error || disponibles.error) return;
+      setStats({
+        reportadas: total.count ?? 0,
+        adoptadas: adoptadas.count ?? 0,
+        disponibles: disponibles.count ?? 0,
+      });
+    }
+
     fetchPets();
+    fetchStats();
   }, []);
 
   return (
@@ -364,12 +392,13 @@ export default function Home() {
           </a>
           <div className="flex justify-center gap-8 md:gap-14 mt-10 md:mt-16">
             {[
-              { num: '127', label: 'Reportadas' },
-              { num: '89', label: 'Adoptadas' },
-              { num: '38', label: 'Disponibles' },
+              { num: stats?.reportadas, label: 'Reportadas' },
+              { num: stats?.adoptadas, label: 'Adoptadas' },
+              { num: stats?.disponibles, label: 'Disponibles' },
             ].map((s) => (
               <div key={s.label} className="text-center">
-                <div className="text-orange-500 text-3xl md:text-4xl font-bold">{s.num}</div>
+                {/* Mientras cargan se muestra un guion: un 0 se leería como dato real */}
+                <div className="text-orange-500 text-3xl md:text-4xl font-bold">{s.num ?? '—'}</div>
                 <div className="text-white/50 text-sm mt-1.5">{s.label}</div>
               </div>
             ))}
