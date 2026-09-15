@@ -148,7 +148,7 @@ function DonationBanner() {
   const finalAmount = showCustom ? parseInt(custom.replace(/\D/g, '') || '0') : selected;
 
   return (
-    <div className="mt-16 rounded-3xl bg-gray-100 border border-gray-200 px-8 py-10 flex flex-col md:flex-row items-center gap-8">
+    <div className="mt-10 md:mt-16 rounded-3xl bg-gray-100 border border-gray-200 px-6 md:px-8 py-8 md:py-10 flex flex-col md:flex-row items-center gap-8">
       <div className="flex-1 text-center md:text-left">
         <div className="flex mb-3"><PawPrint size={40} className="text-orange-400" /></div>
         <h3 className="text-[#1a1a2e] text-2xl font-semibold mb-2">Ayúdanos a rescatar más mascotas</h3>
@@ -282,7 +282,7 @@ function FaqPreview() {
             <HelpCircle size={22} className="text-orange-500" />
           </div>
         </div>
-        <h2 className="text-3xl font-semibold text-[#1a1a2e] mb-2">Preguntas frecuentes</h2>
+        <h2 className="text-2xl md:text-3xl font-semibold text-[#1a1a2e] mb-2">Preguntas frecuentes</h2>
         <p className="text-gray-400 text-sm">Todo lo que necesitas saber sobre Matchcota</p>
       </div>
 
@@ -338,7 +338,7 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-gray-50 overflow-x-hidden" suppressHydrationWarning>
-      <section className="relative bg-[#1a1a2e] px-8 py-24 text-center overflow-hidden">
+      <section className="relative bg-[#1a1a2e] px-5 py-14 md:px-8 md:py-24 text-center overflow-hidden">
         {/* Video de fondo */}
         <video
           autoPlay
@@ -353,23 +353,23 @@ export default function Home() {
 
         {/* Contenido */}
         <div className="relative z-10">
-          <h1 className="text-white text-5xl font-bold mb-5 max-w-2xl mx-auto leading-tight">
+          <h1 className="text-white text-3xl md:text-5xl font-bold mb-4 md:mb-5 max-w-2xl mx-auto leading-tight">
             Encuentra tu compañero ideal
           </h1>
-          <p className="text-white/60 text-lg mb-10 max-w-lg mx-auto">
+          <p className="text-white/60 text-base md:text-lg mb-8 md:mb-10 max-w-lg mx-auto">
             Mascotas de la calle que necesitan un hogar. Reporta, adopta y cambia vidas.
           </p>
           <a href="/reportar" className="bg-orange-500 hover:bg-orange-600 text-white px-9 py-3.5 rounded-xl text-base font-semibold transition inline-block">
             Reportar mascota
           </a>
-          <div className="flex justify-center gap-14 mt-16">
+          <div className="flex justify-center gap-8 md:gap-14 mt-10 md:mt-16">
             {[
               { num: '127', label: 'Reportadas' },
               { num: '89', label: 'Adoptadas' },
               { num: '38', label: 'Disponibles' },
             ].map((s) => (
               <div key={s.label} className="text-center">
-                <div className="text-orange-500 text-4xl font-bold">{s.num}</div>
+                <div className="text-orange-500 text-3xl md:text-4xl font-bold">{s.num}</div>
                 <div className="text-white/50 text-sm mt-1.5">{s.label}</div>
               </div>
             ))}
@@ -378,8 +378,8 @@ export default function Home() {
       </section>
 
       {/* Sección de categorías */}
-      <section className="max-w-6xl mx-auto px-8 pt-14 pb-4 w-full">
-        <h2 className="text-3xl font-semibold text-[#1a1a2e] mb-2">Explorar por categoría</h2>
+      <section className="max-w-6xl mx-auto px-5 md:px-8 pt-10 md:pt-14 pb-4 w-full">
+        <h2 className="text-2xl md:text-3xl font-semibold text-[#1a1a2e] mb-2">Explorar por categoría</h2>
         <p className="text-gray-400 mb-8">Encuentra exactamente lo que buscas</p>
         {!loading && (
           <div className="grid grid-cols-2 gap-4">
@@ -450,9 +450,9 @@ export default function Home() {
         )}
       </section>
 
-      <section className="max-w-6xl mx-auto px-8 py-12 w-full">
+      <section className="max-w-6xl mx-auto px-5 md:px-8 py-10 md:py-12 w-full">
         {/* Noticias */}
-        <div className="mt-16 flex items-center justify-between mb-5">
+        <div className="mt-10 md:mt-16 flex items-center justify-between mb-5">
           <div>
             <h2 className="text-2xl font-semibold text-[#1a1a2e]">Noticias</h2>
             <p className="text-gray-400 text-sm mt-1">Lo último sobre mascotas y adopción</p>
