@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Mail, MessageCircle, MapPin, Clock, CheckCircle, Send } from 'lucide-react';
+import { Mail, MessageCircle, MapPin, Clock, CheckCircle, Send, AlertCircle } from 'lucide-react';
 
 const contactItems = [
   { icon: <Mail size={20} className="text-orange-500" />, label: 'Email', value: 'hola@matchcota.cl' },
@@ -11,7 +11,38 @@ const contactItems = [
 ];
 
 export default function Contacto() {
+  const [form, setForm] = useState({ nombre: '', email: '', mensaje: '' });
+  const [enviando, setEnviando] = useState(false);
+  const [error, setError] = useState('');
   const [sent, setSent] = useState(false);
+
+  // Hasta ahora el botón solo pintaba la palomita verde: los campos ni siquiera
+  // estaban conectados a nada, así que el mensaje no existía en ninguna parte.
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setEnviando(true);
+    setError('');
+
+    try {
+      const res = await fetch('/api/contacto', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error ?? 'No pudimos enviar tu mensaje.');
+        setEnviando(false);
+        return;
+      }
+
+      setSent(true);
+    } catch {
+      setError('No pudimos enviar tu mensaje. Revisa tu conexión.');
+      setEnviando(false);
+    }
+  }
 
   return (
     <main className="min-h-screen bg-gray-50">
@@ -41,26 +72,58 @@ export default function Contacto() {
           {!sent ? (
             <>
               <h2 className="text-lg font-semibold text-[#1a1a2e] mb-5">Envíanos un mensaje</h2>
-              <div className="flex flex-col gap-4">
+              <form onSubmit={handleSubmit} className="flex flex-col gap-4">
                 <div>
                   <label className="text-xs text-gray-400 block mb-1">Nombre</label>
-                  <input type="text" placeholder="Tu nombre" className="w-full text-sm px-3 py-2.5 rounded-lg border border-gray-200 focus:outline-none focus:border-orange-400" style={{ fontSize: '16px' }} />
+                  <input
+                    type="text"
+                    value={form.nombre}
+                    onChange={(e) => setForm({ ...form, nombre: e.target.value })}
+                    placeholder="Tu nombre"
+                    required
+                    className="w-full text-sm px-3 py-2.5 rounded-lg border border-gray-200 focus:outline-none focus:border-orange-400"
+                    style={{ fontSize: '16px' }}
+                  />
                 </div>
                 <div>
                   <label className="text-xs text-gray-400 block mb-1">Email</label>
-                  <input type="email" placeholder="tu@email.com" className="w-full text-sm px-3 py-2.5 rounded-lg border border-gray-200 focus:outline-none focus:border-orange-400" style={{ fontSize: '16px' }} />
+                  <input
+                    type="email"
+                    value={form.email}
+                    onChange={(e) => setForm({ ...form, email: e.target.value })}
+                    placeholder="tu@email.com"
+                    required
+                    className="w-full text-sm px-3 py-2.5 rounded-lg border border-gray-200 focus:outline-none focus:border-orange-400"
+                    style={{ fontSize: '16px' }}
+                  />
                 </div>
                 <div>
                   <label className="text-xs text-gray-400 block mb-1">Mensaje</label>
-                  <textarea rows={4} placeholder="¿Cómo podemos ayudarte?" className="w-full text-sm px-3 py-2.5 rounded-lg border border-gray-200 focus:outline-none focus:border-orange-400 resize-none" style={{ fontSize: '16px' }} />
+                  <textarea
+                    rows={4}
+                    value={form.mensaje}
+                    onChange={(e) => setForm({ ...form, mensaje: e.target.value })}
+                    placeholder="¿Cómo podemos ayudarte?"
+                    required
+                    className="w-full text-sm px-3 py-2.5 rounded-lg border border-gray-200 focus:outline-none focus:border-orange-400 resize-none"
+                    style={{ fontSize: '16px' }}
+                  />
                 </div>
+
+                {error && (
+                  <div className="flex items-center gap-2 text-red-500 text-sm bg-red-50 rounded-lg px-3 py-2">
+                    <AlertCircle size={14} /> {error}
+                  </div>
+                )}
+
                 <button
-                  onClick={() => setSent(true)}
-                  className="w-full bg-orange-500 text-white py-3 rounded-xl font-medium hover:bg-orange-600 transition flex items-center justify-center gap-2"
+                  type="submit"
+                  disabled={enviando}
+                  className="w-full bg-orange-500 text-white py-3 rounded-xl font-medium hover:bg-orange-600 disabled:opacity-60 transition flex items-center justify-center gap-2"
                 >
-                  <Send size={16} /> Enviar mensaje
+                  <Send size={16} /> {enviando ? 'Enviando...' : 'Enviar mensaje'}
                 </button>
-              </div>
+              </form>
             </>
           ) : (
             <div className="text-center py-8">
