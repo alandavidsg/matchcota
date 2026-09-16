@@ -3,7 +3,7 @@
 import { useEffect, useState, createContext, useContext } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { supabase } from '../../../lib/supabase';
-import { PawPrint, LayoutDashboard, Heart, MessageSquare, LogOut, Menu, X } from 'lucide-react';
+import { PawPrint, LayoutDashboard, Heart, MessageSquare, LogOut, Menu, X, AlertCircle } from 'lucide-react';
 
 type Refugio = {
   id: string;
@@ -32,6 +32,7 @@ export default function PanelLayout({ children }: { children: React.ReactNode })
   const pathname = usePathname();
   const [loading, setLoading] = useState(true);
   const [refugio, setRefugio] = useState<Refugio | null>(null);
+  const [sinRefugio, setSinRefugio] = useState(false);
   const [token, setToken] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -46,6 +47,15 @@ export default function PanelLayout({ children }: { children: React.ReactNode })
       const res = await fetch('/api/refugios/me', {
         headers: { Authorization: `Bearer ${session.access_token}` },
       });
+
+      // La cuenta entra bien pero no tiene refugio asociado. Antes caía en el
+      // mismo saco que la sesión inválida y se devolvía al login sin explicación:
+      // el refugio reintentaba su contraseña una y otra vez creyendo que fallaba.
+      if (res.status === 404) {
+        setSinRefugio(true);
+        setLoading(false);
+        return;
+      }
 
       if (!res.ok) {
         await supabase.auth.signOut();
@@ -74,6 +84,35 @@ export default function PanelLayout({ children }: { children: React.ReactNode })
           <p className="text-gray-400 text-sm">Cargando panel...</p>
         </div>
       </div>
+    );
+  }
+
+  if (sinRefugio) {
+    return (
+      <main className="min-h-screen bg-[#1a1a2e] flex items-center justify-center px-4">
+        <div className="bg-white rounded-2xl p-8 w-full max-w-sm shadow-2xl text-center">
+          <div className="flex justify-center mb-5">
+            <div className="w-14 h-14 bg-amber-50 rounded-2xl flex items-center justify-center">
+              <AlertCircle size={28} className="text-amber-500" />
+            </div>
+          </div>
+          <h1 className="text-xl font-bold text-[#1a1a2e] mb-2">Tu cuenta no tiene refugio</h1>
+          <p className="text-gray-400 text-sm mb-6 leading-relaxed">
+            Entraste bien — tu contraseña es correcta. Lo que falta es el refugio asociado a esta
+            cuenta, así que todavía no hay un panel que mostrarte. Escríbenos a{' '}
+            <a href="mailto:hola@matchcota.cl" className="text-orange-500 font-medium hover:underline">
+              hola@matchcota.cl
+            </a>{' '}
+            y lo resolvemos.
+          </p>
+          <button
+            onClick={handleLogout}
+            className="w-full bg-orange-500 hover:bg-orange-600 text-white font-medium py-3 rounded-xl transition flex items-center justify-center gap-2"
+          >
+            <LogOut size={16} /> Cerrar sesión
+          </button>
+        </div>
+      </main>
     );
   }
 
