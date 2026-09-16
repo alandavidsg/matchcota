@@ -60,6 +60,11 @@ export default function ReportarPage() {
   const [loadingCercanos, setLoadingCercanos] = useState(false);
   const [form, setForm] = useState({ tipo: '', raza: '', edad: '', color: '', descripcion: '' });
   const [adoptForm, setAdoptForm] = useState({ nombre: '', tipo: '', raza: '', sexo: '', edad: '', color: '', descripcion: '', contactoNombre: '', telefono: '', email: '' });
+  // Contacto de quien reporta una mascota de la calle. No es su dueño, pero es la
+  // única persona que sabe dónde estaba: sin esto la ficha queda sin nadie a quien
+  // avisar cuando alguien la quiere adoptar. Es opcional a propósito — pedirlo
+  // obligatorio espantaría reportes, que es lo que más importa que ocurra.
+  const [reporterForm, setReporterForm] = useState({ nombre: '', telefono: '', email: '' });
   // Descripción visual generada por la IA al analizar la foto. No se muestra ni se
   // edita: alimenta el caché que usa la búsqueda de mascotas perdidas.
   const [visualDescription, setVisualDescription] = useState('');
@@ -272,8 +277,12 @@ export default function ReportarPage() {
     }).catch(() => {});
   };
 
+  const emailValido = (v: string) => /^\S+@\S+\.\S+$/.test(v.trim());
+
   const handleAdoptSubmit = async () => {
     if (!files.length) return;
+    // Sin correo la mascota queda publicada y nadie puede recibir su solicitud.
+    if (!emailValido(adoptForm.email)) return;
     setSubmitting(true);
 
     const imageUrls: string[] = [];
@@ -348,6 +357,9 @@ export default function ReportarPage() {
       urgente: esUrgenteElegible(form.edad) && urgente,
       hogar_temporal: hogarTemporal,
       necesita_operacion: necesitaOperacion,
+      contact_nombre: reporterForm.nombre.trim() || null,
+      contact_telefono: reporterForm.telefono.trim() || null,
+      contact_email: emailValido(reporterForm.email) ? reporterForm.email.trim() : null,
       avistamientos_count: 1,
     }).select('id').single();
 
@@ -620,15 +632,20 @@ export default function ReportarPage() {
                 ))}
               </div>
 
-              <p className="text-xs font-medium text-orange-500 mt-5 mb-4 flex items-center gap-1"><Phone size={13} /> Tus datos de contacto</p>
+              <p className="text-xs font-medium text-orange-500 mt-5 mb-1 flex items-center gap-1"><Phone size={13} /> Tus datos de contacto</p>
+              <p className="text-xs text-orange-400 mb-4 leading-relaxed">
+                Las solicitudes de adopción te llegan a tu correo, así que sin él la ficha queda publicada sin nadie que la reciba.
+              </p>
               <div className="flex flex-col gap-3">
                 {[
-                  { label: 'Tu nombre', key: 'contactoNombre', placeholder: 'Nombre completo' },
-                  { label: 'Teléfono', key: 'telefono', placeholder: '+56 9 xxxx xxxx' },
-                  { label: 'Email', key: 'email', placeholder: 'tu@email.com' },
+                  { label: 'Tu nombre', key: 'contactoNombre', placeholder: 'Nombre completo', obligatorio: false },
+                  { label: 'Teléfono', key: 'telefono', placeholder: '+56 9 xxxx xxxx', obligatorio: false },
+                  { label: 'Email', key: 'email', placeholder: 'tu@email.com', obligatorio: true },
                 ].map((f) => (
                   <div key={f.key}>
-                    <label className="text-xs text-gray-400 block mb-1">{f.label}</label>
+                    <label className="text-xs text-gray-400 block mb-1">
+                      {f.label}{f.obligatorio && <span className="text-orange-500"> *</span>}
+                    </label>
                     <input value={adoptForm[f.key as keyof typeof adoptForm]} onChange={(e) => setAdoptForm({ ...adoptForm, [f.key]: e.target.value })} placeholder={f.placeholder} className="w-full text-sm px-3 py-2 rounded-lg border border-gray-200 bg-white focus:outline-none focus:border-orange-400" style={{ fontSize: '16px' }} />
                   </div>
                 ))}
@@ -677,9 +694,14 @@ export default function ReportarPage() {
               </label>
             )}
             {hasPhotos && (
-              <button onClick={handleAdoptSubmit} disabled={submitting} className="w-full bg-orange-500 text-white py-4 rounded-xl font-medium hover:bg-orange-600 transition disabled:opacity-60 touch-manipulation" style={{ fontSize: '16px' }}>
-                {submitting ? 'Publicando...' : 'Publicar en catálogo'}
-              </button>
+              <>
+                <button onClick={handleAdoptSubmit} disabled={submitting || !emailValido(adoptForm.email)} className="w-full bg-orange-500 text-white py-4 rounded-xl font-medium hover:bg-orange-600 transition disabled:opacity-60 touch-manipulation" style={{ fontSize: '16px' }}>
+                  {submitting ? 'Publicando...' : 'Publicar en catálogo'}
+                </button>
+                {!emailValido(adoptForm.email) && (
+                  <p className="text-xs text-gray-400 text-center mt-2">Falta tu email para poder publicar</p>
+                )}
+              </>
             )}
           </>
         ) : (
@@ -795,6 +817,27 @@ export default function ReportarPage() {
                     <input value={locationReady ? location : ''} onChange={(e) => setLocation(e.target.value)} placeholder={locationReady ? '' : 'Obteniendo ubicación...'} className="flex-1 text-sm px-3 py-2 rounded-lg border border-gray-200 bg-white focus:outline-none focus:border-orange-400" style={{ fontSize: '16px' }} />
                     <button type="button" onClick={getLocation} className="text-xs px-3 py-2 rounded-lg bg-orange-100 text-orange-600 flex items-center"><MapPin size={14} /></button>
                   </div>
+                </div>
+              </div>
+            )}
+
+            {hasPhotos && !analyzing && (
+              <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-5 mb-6">
+                <p className="text-xs font-medium text-emerald-700 mb-1 flex items-center gap-1"><Phone size={13} /> ¿Te podemos escribir? <span className="text-emerald-400 font-normal">(opcional)</span></p>
+                <p className="text-xs text-emerald-500 mb-4 leading-relaxed">
+                  No eres su dueño, pero eres quien sabe dónde está. Si alguien quiere adoptarlo, le avisamos a quien reportó — si no dejas nada, la solicitud la gestiona el equipo de Matchcota.
+                </p>
+                <div className="flex flex-col gap-3">
+                  {[
+                    { label: 'Tu nombre', key: 'nombre', placeholder: 'Nombre completo' },
+                    { label: 'Teléfono', key: 'telefono', placeholder: '+56 9 xxxx xxxx' },
+                    { label: 'Email', key: 'email', placeholder: 'tu@email.com' },
+                  ].map((f) => (
+                    <div key={f.key}>
+                      <label className="text-xs text-gray-400 block mb-1">{f.label}</label>
+                      <input value={reporterForm[f.key as keyof typeof reporterForm]} onChange={(e) => setReporterForm({ ...reporterForm, [f.key]: e.target.value })} placeholder={f.placeholder} className="w-full text-sm px-3 py-2 rounded-lg border border-gray-200 bg-white focus:outline-none focus:border-emerald-400" style={{ fontSize: '16px' }} />
+                    </div>
+                  ))}
                 </div>
               </div>
             )}

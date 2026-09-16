@@ -9,6 +9,9 @@ const supabase = createClient(
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
+// Último escalón de la cadena de destinatarios: el equipo media a mano.
+const ALERT_EMAIL = process.env.AI_ALERT_EMAIL || 'alansaldias@gmail.com';
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
@@ -21,11 +24,11 @@ export async function POST(req: NextRequest) {
     const tipoSolicitud = tipo === 'hogar_temporal' ? 'hogar_temporal' : 'adopcion';
 
     // 1. Obtener la mascota. El destinatario se resuelve acá y no desde el body:
-    //    solo el refugio que PUBLICÓ la mascota recibe sus solicitudes; el refugio
-    //    cercano asignado por geolocalización es informativo y no interviene.
+    //    manda siempre quien PUBLICÓ la mascota, y el refugio cercano solo aparece
+    //    como último recurso cuando no hay nadie más (ver la cascada más abajo).
     const { data: mascota } = await supabase
       .from('mascotas')
-      .select('name, type, breed, image, location, contact_email, refugio_id')
+      .select('name, type, breed, image, location, contact_email, refugio_id, refugio_cercano_id')
       .eq('id', mascota_id)
       .single();
 
@@ -33,16 +36,44 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Mascota no encontrada' }, { status: 404 });
     }
 
+    // El destinatario se busca en cascada. Antes eran dos escalones y si ninguno
+    // existía la solicitud se guardaba sin que nadie se enterara nunca: casi todo
+    // el catálogo son mascotas vistas en la calle, que no tienen dueño ni refugio.
+    // Ahora el último escalón siempre existe.
     let destinatario: string | null = null;
+    let via: 'refugio' | 'publicador' | 'refugio_cercano' | 'mediacion' = 'mediacion';
+
     if (mascota.refugio_id) {
       const { data: refugio } = await supabase
         .from('refugios')
         .select('email')
         .eq('id', mascota.refugio_id)
         .single();
-      destinatario = refugio?.email ?? null;
-    } else {
-      destinatario = mascota.contact_email ?? null;
+      if (refugio?.email) {
+        destinatario = refugio.email;
+        via = 'refugio';
+      }
+    }
+    if (!destinatario && mascota.contact_email) {
+      destinatario = mascota.contact_email;
+      via = 'publicador';
+    }
+    // El refugio cercano es informativo y no es dueño de la mascota, pero si nadie
+    // más puede recibir la solicitud es quien está físicamente más cerca de ayudar.
+    if (!destinatario && mascota.refugio_cercano_id) {
+      const { data: cercano } = await supabase
+        .from('refugios')
+        .select('email')
+        .eq('id', mascota.refugio_cercano_id)
+        .single();
+      if (cercano?.email) {
+        destinatario = cercano.email;
+        via = 'refugio_cercano';
+      }
+    }
+    if (!destinatario) {
+      destinatario = ALERT_EMAIL;
+      via = 'mediacion';
     }
 
     // 2. Insertar solicitud
@@ -58,8 +89,8 @@ export async function POST(req: NextRequest) {
     }
 
     // 3. Enviar email si hay destinatario (error no bloquea la solicitud)
-    if (!destinatario) {
-      console.warn(`solicitud ${solicitud?.id} sin destinatario: mascota ${mascota_id} no tiene refugio ni contact_email`);
+    if (via === 'mediacion') {
+      console.warn(`solicitud ${solicitud?.id}: mascota ${mascota_id} sin refugio ni contacto, se deriva a ${ALERT_EMAIL}`);
     }
     if (destinatario && process.env.RESEND_API_KEY) { try {
       const esHogarTemporal = tipoSolicitud === 'hogar_temporal';
@@ -92,6 +123,17 @@ export async function POST(req: NextRequest) {
             <p style="color:#aaaaaa;font-size:13px;margin:6px 0 0;">Plataforma de adopción de mascotas</p>
           </td>
         </tr>
+
+        <!-- Por qué te llega a ti: solo cuando el destinatario no publicó la mascota -->
+        ${via === 'refugio_cercano' || via === 'mediacion' ? `<tr>
+          <td style="background:#eef3fc;padding:14px 32px;border-bottom:1px solid #dbe5f8;">
+            <p style="margin:0;color:#2b4a8b;font-size:13px;line-height:1.5;">
+              ${via === 'refugio_cercano'
+                ? 'Esta mascota no la publicó ningún refugio: te llega a ti por ser el refugio más cercano al lugar donde fue vista. Si no puedes hacerte cargo, respóndenos y la derivamos.'
+                : 'Esta mascota fue vista en la calle y no tiene dueño ni refugio registrado, así que la solicitud llega al equipo de Matchcota para gestionarla a mano.'}
+            </p>
+          </td>
+        </tr>` : ''}
 
         <!-- Alerta -->
         <tr>
