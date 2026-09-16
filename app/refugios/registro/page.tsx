@@ -86,7 +86,8 @@ export default function RefugioRegistro() {
           </div>
           <h2 className="text-xl font-bold text-[#1a1a2e] mb-2">¡Refugio registrado!</h2>
           <p className="text-gray-400 text-sm mb-6">
-            Tu cuenta ha sido creada correctamente. Ya puedes ingresar al panel.
+            Ya puedes entrar al panel y cargar tus mascotas. Nos queda revisar la cuenta
+            antes de empezar a derivarte solicitudes de adopción — te avisamos apenas esté.
           </p>
           <a
             href="/refugios/login"

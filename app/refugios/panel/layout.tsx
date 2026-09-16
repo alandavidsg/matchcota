@@ -191,6 +191,19 @@ export default function PanelLayout({ children }: { children: React.ReactNode })
 
         {/* Content */}
         <main className="flex-1 max-w-5xl w-full mx-auto px-4 md:px-8 py-8">
+          {refugio && !refugio.aprobado && (
+            <div className="flex items-start gap-3 bg-amber-50 border border-amber-100 rounded-2xl p-4 mb-6">
+              <AlertCircle size={18} className="text-amber-500 shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-semibold text-amber-700">Tu refugio está en revisión</p>
+                <p className="text-xs text-amber-600 mt-1 leading-relaxed">
+                  Puedes usar el panel y cargar tus mascotas con normalidad. Lo que todavía no
+                  ocurre es que te derivemos solicitudes de adopción ni avisos de mascotas cerca
+                  de ti: eso se activa cuando aprobemos la cuenta.
+                </p>
+              </div>
+            </div>
+          )}
           {children}
         </main>
       </div>

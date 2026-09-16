@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { Resend } from 'resend';
 import { supabaseAdmin } from '../../../../lib/supabase-admin';
+
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+const ALERT_EMAIL = process.env.AI_ALERT_EMAIL || 'alansaldias@gmail.com';
 
 // Geocodifica una región de Chile a coordenadas aproximadas (centro de la región)
 async function geocodeRegion(region: string): Promise<{ lat: number; lng: number } | null> {
@@ -53,7 +57,11 @@ export async function POST(req: NextRequest) {
       telefono: telefono || null,
       region: region || null,
       descripcion: descripcion || null,
-      aprobado: true,
+      // Nace en revisión: un refugio aprobado recibe las solicitudes de adopción
+      // de su zona, con el nombre, el correo y el teléfono de quien quiere
+      // adoptar. Eso no puede quedar abierto a cualquiera que llene el
+      // formulario, y menos con el email sin verificar.
+      aprobado: false,
       lat: coords?.lat ?? null,
       lng: coords?.lng ?? null,
     });
@@ -62,6 +70,25 @@ export async function POST(req: NextRequest) {
       // Revertir: eliminar el usuario creado
       await supabaseAdmin.auth.admin.deleteUser(authData.user.id);
       return NextResponse.json({ error: 'Error al crear perfil del refugio' }, { status: 500 });
+    }
+
+    // Aviso para poder aprobarlo: sin esto el refugio queda esperando en
+    // silencio y nadie se entera de que hay algo que revisar.
+    if (resend) {
+      resend.emails.send({
+        from: 'Matchcota <notificaciones@matchcota.cl>',
+        to: ALERT_EMAIL,
+        subject: `🏠 Nuevo refugio por aprobar: ${nombre}`,
+        html: `
+          <p><b>${nombre}</b> se registró y está esperando aprobación.</p>
+          <p><b>Email:</b> ${email}<br>
+          ${telefono ? `<b>Teléfono:</b> ${telefono}<br>` : ''}
+          ${region ? `<b>Región:</b> ${region}<br>` : ''}
+          ${coords ? `<b>Ubicación:</b> ${coords.lat}, ${coords.lng}` : '<b>Ubicación:</b> sin coordenadas'}</p>
+          ${descripcion ? `<p><b>Descripción:</b> ${descripcion}</p>` : ''}
+          <p style="color:#888;font-size:13px;">Para aprobarlo: Supabase → Table Editor → refugios → poner <code>aprobado</code> en true. Hasta entonces no recibe solicitudes ni aparece como refugio cercano.</p>
+        `,
+      }).catch((err) => console.error('aviso de registro error:', err));
     }
 
     return NextResponse.json({ ok: true });
