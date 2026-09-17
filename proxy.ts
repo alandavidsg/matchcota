@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { MODO_PRIVADO } from './lib/siteUrl';
 
-// matchcota.cl muestra la página "Próximamente" al público.
-// Cualquier otro host (URL de pruebas *.vercel.app) exige la contraseña del sitio.
-const COMING_SOON_HOSTS = ['matchcota.cl', 'www.matchcota.cl'];
+// Los dominios públicos del sitio. Las URLs de pruebas NO van acá: esas quedan
+// siempre detrás de la contraseña, también después del lanzamiento, para que el
+// sitio viva en una sola dirección y el ensayo no se confunda con lo real.
+const PUBLIC_HOSTS = ['matchcota.cl', 'www.matchcota.cl'];
 
 export function proxy(req: NextRequest) {
   const host = req.headers.get('host')?.toLowerCase() ?? '';
@@ -13,15 +15,20 @@ export function proxy(req: NextRequest) {
     return NextResponse.next();
   }
 
-  // ── matchcota.cl: todo se reescribe a /proximamente (la URL no cambia en la barra)
-  if (COMING_SOON_HOSTS.includes(host)) {
+  // ── Dominio público
+  if (PUBLIC_HOSTS.includes(host)) {
+    // Lanzado: el proxy no se mete en nada. Las vistas de administración siguen
+    // cerradas por su cuenta — cada route valida la cookie por dentro.
+    if (!MODO_PRIVADO) return NextResponse.next();
+
+    // Sin lanzar: todo se reescribe a /proximamente (la URL no cambia en la barra)
     if (pathname === '/proximamente') return NextResponse.next();
     const url = req.nextUrl.clone();
     url.pathname = '/proximamente';
     return NextResponse.rewrite(url);
   }
 
-  // ── Resto de hosts: muro de contraseña (modo privado)
+  // ── Resto de hosts (URLs de pruebas): muro de contraseña
   if (
     pathname.startsWith('/login') ||
     pathname.startsWith('/api/login') ||

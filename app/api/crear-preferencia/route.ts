@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { SITE_URL } from '../../../lib/siteUrl';
 
 export async function POST(req: NextRequest) {
   const accessToken = process.env.MP_ACCESS_TOKEN;
@@ -11,7 +12,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Monto inválido' }, { status: 400 });
   }
 
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://matchcotacl-alan-s-team.vercel.app';
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? SITE_URL;
 
   try {
     const response = await fetch('https://api.mercadopago.com/checkout/preferences', {

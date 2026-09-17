@@ -2,12 +2,10 @@ import { Suspense } from 'react';
 import type { Metadata } from 'next';
 import { headers } from 'next/headers';
 import PetDetailClient from './PetDetailClient';
+import { SITE_URL } from '../../../lib/siteUrl';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
-
-// URL de pruebas mientras matchcota.cl está en modo "Próximamente"; al lanzar, cambiar a https://matchcota.cl
-const SITE_URL = 'https://matchcotacl-alan-s-team.vercel.app';
 
 type Props = {
   params: Promise<{ id: string }>;

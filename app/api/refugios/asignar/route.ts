@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '../../../../lib/supabase-admin';
 import { Resend } from 'resend';
+import { SITE_URL } from '../../../../lib/siteUrl';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
-// URL de pruebas mientras matchcota.cl está en modo "Próximamente"; al lanzar, cambiar a https://matchcota.cl
-const SITE_URL = 'https://matchcotacl-alan-s-team.vercel.app';
 
 // Distancia en km entre dos puntos (haversine)
 function distanciaKm(lat1: number, lng1: number, lat2: number, lng2: number): number {

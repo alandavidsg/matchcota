@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { Resend } from 'resend';
+import { SITE_URL } from '../../../lib/siteUrl';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -98,8 +99,6 @@ export async function POST(req: NextRequest) {
       const petType = mascota?.breed ? `${mascota.type} ${mascota.breed}` : mascota?.type ?? '';
       const petLocation = mascota?.location ?? '';
       const petImage = mascota?.image ?? '';
-      // URL de pruebas mientras matchcota.cl está en modo "Próximamente"; al lanzar, cambiar a https://matchcota.cl
-      const siteUrl = 'https://matchcotacl-alan-s-team.vercel.app';
 
       await resend.emails.send({
         from: 'Matchcota <notificaciones@matchcota.cl>',
@@ -198,7 +197,7 @@ export async function POST(req: NextRequest) {
         <!-- CTA -->
         <tr>
           <td style="padding:0 32px 28px;text-align:center;">
-            <a href="${siteUrl}/mascota/${mascota_id}" style="display:inline-block;background:#e86c00;color:#ffffff;text-decoration:none;font-weight:bold;font-size:15px;padding:14px 32px;border-radius:10px;">
+            <a href="${SITE_URL}/mascota/${mascota_id}" style="display:inline-block;background:#e86c00;color:#ffffff;text-decoration:none;font-weight:bold;font-size:15px;padding:14px 32px;border-radius:10px;">
               Ver ficha de ${petName}
             </a>
           </td>
@@ -209,7 +208,7 @@ export async function POST(req: NextRequest) {
           <td style="background:#f9f9f9;padding:16px 32px;text-align:center;border-top:1px solid #eeeeee;">
             <p style="margin:0;font-size:12px;color:#aaaaaa;">
               Este email fue enviado automáticamente por Matchcota.<br>
-              <a href="${siteUrl}" style="color:#e86c00;text-decoration:none;">matchcota.cl</a>
+              <a href="${SITE_URL}" style="color:#e86c00;text-decoration:none;">matchcota.cl</a>
             </p>
           </td>
         </tr>
