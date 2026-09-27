@@ -1,0 +1,92 @@
+MENSAJE PARA INVITAR REFUGIOS A MATCHCOTA
+Escrito el 2026-09-17. Reemplazar lo que está entre [corchetes].
+
+IMPORTANTE — el enlace:
+Mientras el sitio esté en modo privado usar la URL de pruebas, porque
+matchcota.cl muestra "Próximamente" y /refugios está exento del muro:
+  https://matchcotacl-alan-s-team.vercel.app/refugios/registro
+Al lanzar, cambiarlo por:
+  https://matchcota.cl/refugios/registro
+
+Reglas que se siguieron al escribirlo:
+- No esconder que el sitio aún no está abierto (se nota al segundo clic).
+- Nada de cifras inventadas: no hay usuarios ni adopciones todavía.
+- El aviso de mascota cercana se presenta como información, no compromiso.
+
+
+═══════════════════════════════════════════════════════════════════
+VERSIÓN PARA CORREO
+═══════════════════════════════════════════════════════════════════
+
+Asunto: Una plataforma gratis para publicar sus mascotas en adopción
+
+Hola [nombre del refugio]:
+
+Soy [tu nombre], de [ciudad]. Hice Matchcota, una plataforma chilena
+de adopción de mascotas, y antes de abrirla al público quiero que la
+usen algunos refugios de verdad. Por eso les escribo a ustedes.
+
+Qué tendrían:
+
+- Un panel propio para publicar sus mascotas en adopción, con fotos.
+- Las solicitudes les llegan por correo, con el nombre, el teléfono y
+  el mensaje de quien quiere adoptar. Ordenadas, no perdidas entre
+  mensajes de Instagram.
+- Aviso cuando alguien reporta un animal en la calle cerca de ustedes.
+  Es un aviso, no un compromiso: ustedes deciden si pueden o no.
+
+Qué les cuesta: nada. Registrarse toma dos minutos y no los amarra a
+nada — si no les sirve, lo dejan y listo.
+
+Y para ser claro: el sitio todavía no está abierto al público, así que
+hoy no les va a llegar una avalancha de solicitudes. Los invito antes
+para que cuando abra ya estén adentro, y sobre todo para que me digan
+qué les falta. Prefiero construirlo con ustedes que adivinando.
+
+Si les interesa, acá se registran:
+https://matchcotacl-alan-s-team.vercel.app/refugios/registro
+
+Y si prefieren que les muestre el panel por teléfono o en persona,
+respondan este correo y coordinamos.
+
+[tu nombre]
+[tu teléfono]
+
+
+═══════════════════════════════════════════════════════════════════
+VERSIÓN PARA INSTAGRAM O WHATSAPP
+═══════════════════════════════════════════════════════════════════
+
+Hola! Soy [tu nombre]. Hice Matchcota, una plataforma chilena de
+adopción de mascotas, y estoy invitando a algunos refugios antes de
+abrirla al público.
+
+La idea: publican sus mascotas en un panel propio y las solicitudes de
+adopción les llegan por correo, con los datos de quien quiere adoptar,
+en vez de perderse entre los DM. También les avisamos si alguien
+reporta un animal en la calle cerca de ustedes.
+
+Es gratis y registrarse toma dos minutos. Todavía no está abierto al
+público, así que no esperen movimiento inmediato — los invito antes
+para que estén desde el principio y me digan qué les falta.
+
+Acá si quieren mirarlo:
+https://matchcotacl-alan-s-team.vercel.app/refugios/registro
+
+Cualquier duda me escriben 🐾
+
+
+═══════════════════════════════════════════════════════════════════
+AL MANDARLO
+═══════════════════════════════════════════════════════════════════
+
+1. Personalizar: una línea sobre ESE refugio (algo visto en su cuenta,
+   un caso que publicaron) cambia la tasa de respuesta. Un mensaje que
+   se nota mandado a cincuenta lugares se borra.
+2. Partir con cinco o diez de la zona, no con cincuenta. Ajustar el
+   texto con lo que respondan los primeros.
+3. Tener listo el segundo paso: lo que cierra el trato es mostrar el
+   panel en vivo, no otro correo.
+4. Cuando el primero se registre queda EN REVISIÓN y no recibe nada
+   hasta aprobarlo en Supabase (Table Editor → refugios → aprobado =
+   true). Llega un correo avisando. No dejarlo esperando.
