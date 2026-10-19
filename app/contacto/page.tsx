@@ -1,11 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import { Mail, MessageCircle, MapPin, Clock, CheckCircle, Send, AlertCircle } from 'lucide-react';
+import { MapPin, Clock, CheckCircle, Send, AlertCircle } from 'lucide-react';
 
+// Sin tarjeta de email ni de WhatsApp: la dirección hola@matchcota.cl rebota
+// —el dominio no tiene registros MX, así que no recibe nada— y el número que
+// había era de relleno, de modo que publicarlo mandaba desconocidos al teléfono
+// de un tercero. El formulario de abajo sí funciona y sí llega. Cuando existan
+// un buzón de verdad y un número propio, vuelven acá.
 const contactItems = [
-  { icon: <Mail size={20} className="text-orange-500" />, label: 'Email', value: 'hola@matchcota.cl' },
-  { icon: <MessageCircle size={20} className="text-orange-500" />, label: 'WhatsApp', value: '+56 9 1234 5678' },
   { icon: <MapPin size={20} className="text-orange-500" />, label: 'Ubicación', value: 'Santiago, Chile' },
   { icon: <Clock size={20} className="text-orange-500" />, label: 'Horario', value: 'Lunes a Viernes 9:00 - 18:00' },
 ];

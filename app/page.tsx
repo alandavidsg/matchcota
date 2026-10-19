@@ -239,7 +239,7 @@ const faqData = [
     items: [
       { q: '¿A dónde va mi donación?', a: 'Se destina a gastos veterinarios, alimentación y transporte de mascotas rescatadas mientras esperan ser adoptadas.' },
       { q: '¿Puedo donar sin MercadoPago?', a: 'Sí, también aceptamos transferencias bancarias. En la página de donaciones encontrarás los datos bancarios.' },
-      { q: '¿Las donaciones tienen boleta o recibo?', a: 'Por el momento no emitimos boletas tributarias. Si necesitas un comprobante escríbenos a donaciones@matchcota.cl.' },
+      { q: '¿Las donaciones tienen boleta o recibo?', a: 'Por el momento no emitimos boletas tributarias. Si necesitas un comprobante, escríbenos desde la página de Contacto y te lo enviamos.' },
     ],
   },
   {

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Utensils, Syringe, Stethoscope, CreditCard, Loader2, Building2 } from 'lucide-react';
+import { ArrowLeft, Utensils, Syringe, Stethoscope, CreditCard, Loader2 } from 'lucide-react';
 
 const amounts = [1000, 2000, 5000, 10000, 20000];
 
@@ -133,30 +133,10 @@ export default function DonarPage() {
           )}
         </button>
 
-        {/* Transferencia */}
-        <div className="bg-white rounded-2xl border border-gray-100 p-6">
-          <p className="text-sm font-medium text-[#1a1a2e] mb-4 flex items-center gap-2">
-            <Building2 size={16} className="text-gray-500" /> Transferencia bancaria
-          </p>
-          <div className="space-y-3 text-sm">
-            {[
-              { label: 'Banco', value: '—' },
-              { label: 'Tipo de cuenta', value: '—' },
-              { label: 'Número', value: '—' },
-              { label: 'RUT', value: '—' },
-              { label: 'Nombre', value: '—' },
-              { label: 'Email', value: '—' },
-            ].map((row) => (
-              <div key={row.label} className="flex justify-between">
-                <span className="text-gray-400">{row.label}</span>
-                <span className="text-[#1a1a2e] font-medium">{row.value}</span>
-              </div>
-            ))}
-          </div>
-          <p className="text-xs text-gray-400 mt-4 text-center">
-            Envía el comprobante a <span className="text-orange-500">donaciones@matchcota.cl</span>
-          </p>
-        </div>
+        {/* La tarjeta de transferencia bancaria se quitó hasta tener los datos:
+            mostraba las seis filas en blanco (banco, tipo de cuenta, número, RUT,
+            nombre, email) y pedía el comprobante a donaciones@matchcota.cl, que
+            tampoco recibe correo. Mercado Pago sí funciona y queda como única vía. */}
 
       </div>
     </main>

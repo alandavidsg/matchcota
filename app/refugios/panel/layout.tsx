@@ -99,9 +99,9 @@ export default function PanelLayout({ children }: { children: React.ReactNode })
           <h1 className="text-xl font-bold text-[#1a1a2e] mb-2">Tu cuenta no tiene refugio</h1>
           <p className="text-gray-400 text-sm mb-6 leading-relaxed">
             Entraste bien — tu contraseña es correcta. Lo que falta es el refugio asociado a esta
-            cuenta, así que todavía no hay un panel que mostrarte. Escríbenos a{' '}
-            <a href="mailto:hola@matchcota.cl" className="text-orange-500 font-medium hover:underline">
-              hola@matchcota.cl
+            cuenta, así que todavía no hay un panel que mostrarte.{' '}
+            <a href="/contacto" className="text-orange-500 font-medium hover:underline">
+              Escríbenos
             </a>{' '}
             y lo resolvemos.
           </p>

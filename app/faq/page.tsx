@@ -72,7 +72,7 @@ const faqs = [
       },
       {
         q: '¿Las donaciones tienen boleta o recibo?',
-        a: 'Por el momento no emitimos boletas tributarias. Si realizas una transferencia y necesitas un comprobante, escríbenos a donaciones@matchcota.cl y te lo enviamos.',
+        a: 'Por el momento no emitimos boletas tributarias. Si necesitas un comprobante, escríbenos desde la página de Contacto y te lo enviamos.',
       },
     ],
   },
